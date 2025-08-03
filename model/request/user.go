@@ -1,0 +1,57 @@
+package request
+
+import "goMedia/model/appTypes"
+
+type Register struct {
+	Password         string `json:"password" binding:"required,min=6,max=16"`
+	Email            string `json:"email" binding:"required,email"`
+	VerificationCode string `json:"verification_code" binding:"required,len=6"`
+}
+
+type Login struct {
+	Email     string `json:"email" binding:"required,email"`
+	Password  string `json:"password" binding:"required,min=6,max=16"`
+	Captcha   string `json:"captcha" binding:"required,len=6"`
+	CaptchaID string `json:"captcha_id" binding:"required"`
+}
+
+type ForgotPassword struct {
+	Email            string `json:"email" binding:"required,email"`
+	VerificationCode string `json:"verification_code" binding:"required,len=6"`
+	NewPassword      string `json:"new_password" binding:"required,min=8,max=16"`
+}
+
+type UserResetPassword struct {
+	UUID        string `json:"-"`
+	Password    string `json:"password" binding:"required,min=8,max=16"`
+	NewPassword string `json:"new_password" binding:"required,min=8,max=16"`
+}
+
+type UserOperation struct {
+	ID string `json:"id" binding:"required"`
+}
+
+type EditUser struct {
+	UUID     string          `json:"uuid" binding:"required"`
+	Password string          `json:"password"`
+	RoleID   appTypes.RoleID `json:"role_id"`
+	Freeze   bool            `json:"freeze"`
+	Email    string          `json:"email"`
+}
+
+type AddUser struct {
+	Password string          `json:"password"`
+	RoleID   appTypes.RoleID `json:"role_id"`
+	Freeze   bool            `json:"freeze"`
+	Email    string          `json:"email"`
+}
+
+type UserList struct {
+	Search string `json:"search"`
+	PageInfo
+}
+
+type UserLoginList struct {
+	Search string `json:"search"`
+	PageInfo
+}
