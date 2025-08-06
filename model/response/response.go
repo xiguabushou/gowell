@@ -14,6 +14,7 @@ type Response struct {
 const (
 	ERROR   = 7
 	SUCCESS = 0
+	NOAUTH  = 9
 )
 
 func Result(code int, data interface{}, msg string, c *gin.Context) {
@@ -53,7 +54,7 @@ func FailWithDataAndMessage(data interface{}, message string, c *gin.Context) {
 }
 
 func NoAuth(message string, c *gin.Context) {
-	Result(ERROR, gin.H{"reload": true}, message, c)
+	Result(NOAUTH, gin.H{"reload": true}, message, c)
 }
 
 func Forbidden(message string, c *gin.Context) {

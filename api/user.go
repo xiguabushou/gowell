@@ -133,36 +133,18 @@ func (userApi *UserApi) ForgotPassword(c *gin.Context) {
 		return
 	}
 
-	session := sessions.Default(c)
-
-	// 两次邮箱一致性判断
-	savedEmail := session.Get("email")
-	if savedEmail == nil || savedEmail.(string) != req.Email {
-		response.FailWithMessage("This email doesn't match the email to be verified", c)
+	if store.Verify(req.CaptchaID, req.Captcha, true) {
+		err = userService.ForgotPassword(req.Email)
+		if err != nil {
+			global.Log.Error("Failed to send email:", zap.Error(err))
+			response.FailWithMessage("Failed to send email", c)
+			return
+		}
+		response.OkWithMessage("Successfully sent email", c)
 		return
 	}
-
-	// 获取会话中存储的邮箱验证码
-	savedCode := session.Get("verification_code")
-	if savedCode == nil || savedCode.(string) != req.VerificationCode {
-		response.FailWithMessage("Invalid verification code", c)
-		return
-	}
-
-	// 判断邮箱验证码是否过期
-	savedTime := session.Get("expire_time")
-	if savedTime.(int64) < time.Now().Unix() {
-		response.FailWithMessage("The verification code has expired, please resend it", c)
-		return
-	}
-
-	err = userService.ForgotPassword(req)
-	if err != nil {
-		global.Log.Error("Failed to retrieve the password:", zap.Error(err))
-		response.FailWithMessage("Failed to retrieve the password", c)
-		return
-	}
-	response.OkWithMessage("Successfully retrieved", c)
+	response.FailWithMessage("Incorrect verification code", c)
+	return
 }
 
 func (userApi *UserApi) AskForVip(c *gin.Context) {
@@ -300,6 +282,23 @@ func (userApi *UserApi) UserLoginList(c *gin.Context) {
 		Total: total,
 	}, c)
 }
+
+func (userApi *UserApi) ResetForgotPassword(c *gin.Context) {
+	var req request.ResetForgotPassword
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	err = userService.ResetForgotPassword(req)
+	if err != nil {
+		global.Log.Error("Failed to reset forgot password:", zap.Error(err))
+		response.FailWithMessage("Failed to reset forgot password", c)
+		return
+	}
+	response.OkWithMessage("Successfully reset forgot password", c)
+}
+
 func (userApi *UserApi) TokenNext(c *gin.Context, user database.User) {
 	// 检查用户是否被冻结
 	if user.Freeze {

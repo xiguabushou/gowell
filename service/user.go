@@ -57,13 +57,32 @@ func (userService *UserService) DeleteUser(id string) error {
 	return global.DB.Where("uuid = ?", id).Delete(&database.User{}).Error
 }
 
-func (userService *UserService) ForgotPassword(req request.ForgotPassword) error {
-	var user database.User
-	if err := global.DB.Where("email = ?", req.Email).First(&user).Error; err != nil {
-		return err
+func (userService *UserService) ForgotPassword(email string) error {
+
+	baseClaims := request.ForgotPasswordClaims{
+		Email: email,
 	}
-	user.Password = utils.BcryptHash(req.NewPassword)
-	return global.DB.Save(&user).Error
+
+	j := utils.NewJWT()
+	TokenClaims := j.CreateTokenClaims(baseClaims)
+	token, _ := j.CreateToken(TokenClaims)
+
+	url := global.Config.System.ForgotPasswordUrl + "?token=" + token
+
+	subject := "重新设置密码请求"
+	body := `亲爱的用户[` + email + `]，
+<br/>
+<br/>
+你正在进行使用该邮箱重新设置密码！为了确保您的账号安全，请进入下面网址进行修改密码：<br/>
+<br/>
+网址：[<font color="blue"><u>` + url + `</u></font>]<br/>
+该网址在 5 分钟内有效，请尽快使用。<br/>
+<br/>
+如果您没有此请求，请忽略此邮件。
+<br/>
+`
+	_ = utils.Email(email, subject, body)
+	return nil
 }
 
 func (userService *UserService) Logout(c *gin.Context) error {
@@ -154,4 +173,33 @@ func (userService *UserService) UserLoginList(info request.UserLoginList) (inter
 	}
 
 	return utils.MySQLPagination(&database.Login{}, option)
+}
+
+func (userService *UserService) ResetForgotPassword(req request.ResetForgotPassword) error {
+	token := req.Token
+
+	j := utils.NewJWT()
+	claims, err := j.ParseToken(token)
+	if err != nil {
+		return err
+	}
+
+	var JwtBlacklist database.JwtBlacklist
+	if !errors.Is(global.DB.Where("jwt = ?", token).First(&JwtBlacklist).Error, gorm.ErrRecordNotFound) {
+		return errors.New("jwt blacklist")
+	}
+
+	var user database.User
+	if err := global.DB.Where("email = ?", claims.Email).First(&user).Error; err != nil {
+		return err
+	}
+	user.Password = utils.BcryptHash(req.NewPassword)
+
+	oldJwt := database.JwtBlacklist{
+		Jwt:         token,
+		CreatedTime: time.Now(),
+	}
+
+	global.DB.Create(&oldJwt)
+	return global.DB.Save(&user).Error
 }

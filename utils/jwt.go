@@ -39,8 +39,26 @@ func (j *JWT) CreateAccessClaims(baseClaims request.BaseClaims) request.JwtCusto
 	return claims
 }
 
+func (j *JWT) CreateTokenClaims(baseClaims request.ForgotPasswordClaims) request.JwtCustomClaims2 {
+	ep, _ := ParseDuration("5m") // 获取过期时间
+	claims := request.JwtCustomClaims2{
+		ForgotPasswordClaims: baseClaims, // 基本 Claims
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience:  jwt.ClaimStrings{"TAP"},                // 受众
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ep)), // 过期时间
+			Issuer:    global.Config.Jwt.Issuer,               // 签名的发行者
+		},
+	}
+	return claims
+}
+
 // CreateAccessToken 创建  Token，通过 Claims 生成 JWT Token
 func (j *JWT) CreateAccessToken(claims request.JwtCustomClaims) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims) // 创建新的 JWT Token
+	return token.SignedString(j.TokenSecret)                   // 使用 AccessToken 密钥签名并返回 Token 字符串
+}
+
+func (j *JWT) CreateToken(claims request.JwtCustomClaims2) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims) // 创建新的 JWT Token
 	return token.SignedString(j.TokenSecret)                   // 使用 AccessToken 密钥签名并返回 Token 字符串
 }
@@ -52,6 +70,17 @@ func (j *JWT) ParseAccessToken(tokenString string) (*request.JwtCustomClaims, er
 		return nil, err
 	}
 	if customClaims, ok := claims.(*request.JwtCustomClaims); ok { // 确保解析出的 Claims 类型正确
+		return customClaims, nil
+	}
+	return nil, TokenInvalid // 如果解析结果无效，返回 TokenInvalid 错误
+}
+
+func (j *JWT) ParseToken(tokenString string) (*request.JwtCustomClaims2, error) {
+	claims, err := j.parseToken(tokenString, &request.JwtCustomClaims2{}, j.TokenSecret) // 解析 Token
+	if err != nil {
+		return nil, err
+	}
+	if customClaims, ok := claims.(*request.JwtCustomClaims2); ok { // 确保解析出的 Claims 类型正确
 		return customClaims, nil
 	}
 	return nil, TokenInvalid // 如果解析结果无效，返回 TokenInvalid 错误

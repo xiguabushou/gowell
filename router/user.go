@@ -21,6 +21,7 @@ func (u *UserRouter) InitUserRouter(PublicRouter *gin.RouterGroup, UserRouter *g
 	}
 	{
 		userPublicRouter.POST("forgotPassword", userApi.ForgotPassword)
+		userPublicRouter.POST("resetForgotPassword", userApi.ResetForgotPassword)
 	}
 	{
 		userUserRouter.POST("askForVip", userApi.AskForVip)
