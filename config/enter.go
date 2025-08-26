@@ -8,4 +8,5 @@ type Config struct {
 	Upload  Upload  `json:"upload" yaml:"upload"`
 	Captcha Captcha `json:"captcha" yaml:"captcha"`
 	Email   Email   `json:"email" yaml:"email"`
+	Gaode   Gaode   `json:"gaode" yaml:"gaode"`
 }

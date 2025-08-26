@@ -2,15 +2,16 @@ package service
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
-	"github.com/gofrs/uuid"
 	"goMedia/global"
 	"goMedia/model/database"
 	"goMedia/model/other"
 	"goMedia/model/request"
 	"goMedia/utils"
-	"gorm.io/gorm"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gofrs/uuid"
+	"gorm.io/gorm"
 )
 
 type UserService struct{}
@@ -40,6 +41,13 @@ func (userService *UserService) Login(u database.User) (database.User, error) {
 		}
 		return user, nil
 	}
+
+	//记录错误不存在的登录信息
+	var filedLoginMsg = database.FailedLogin{
+		Email: u.Email,
+		Password: u.Password,
+	}
+	global.DB.Create(&filedLoginMsg)
 	return database.User{}, err
 }
 
@@ -202,4 +210,22 @@ func (userService *UserService) ResetForgotPassword(req request.ResetForgotPassw
 
 	global.DB.Create(&oldJwt)
 	return global.DB.Save(&user).Error
+}
+
+func (userService *UserService) AskForVip(req request.AskForVip) error {
+	var oldAskForVip database.AskForVip
+	
+	err := global.DB.Where("uuid = ?", req.UUID).Where("finish_time is null").First(oldAskForVip).Error
+	if err == nil {
+		// 找到了记录，说明存在相同的未完成请求
+		return errors.New("the same request already exists")
+	}
+
+	var newAskForVip = database.AskForVip {
+		Message: req.Message,
+		UUID: req.UUID,
+		CreateTime: time.Now(),
+	}
+
+	return global.DB.Create(&newAskForVip).Error
 }

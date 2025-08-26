@@ -12,6 +12,10 @@ func SQL() error {
 		&database.Login{},
 		&database.JwtBlacklist{},
 		&database.Jwt{},
+		&database.AskForVip{},
+		&database.Content{},
+		&database.Photo{},
+		&database.FailedLogin{},
 
 		// TODO 添加更新的数据库表
 	)

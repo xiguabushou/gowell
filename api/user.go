@@ -2,18 +2,20 @@ package api
 
 import (
 	"errors"
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-gonic/gin"
-	"github.com/gofrs/uuid"
-	"go.uber.org/zap"
+	"fmt"
 	"goMedia/global"
 	"goMedia/model/appTypes"
 	"goMedia/model/database"
 	"goMedia/model/request"
 	"goMedia/model/response"
 	"goMedia/utils"
-	"gorm.io/gorm"
 	"time"
+
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-gonic/gin"
+	"github.com/gofrs/uuid"
+	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 type UserApi struct{}
@@ -29,6 +31,8 @@ func (userApi *UserApi) Register(c *gin.Context) {
 
 	// 两次邮箱一致性判断
 	savedEmail := session.Get("email")
+	fmt.Println(savedEmail)
+	fmt.Println(req.Email)
 	if savedEmail == nil || savedEmail.(string) != req.Email {
 		response.FailWithMessage("This email doesn't match the email to be verified", c)
 		return
@@ -148,7 +152,19 @@ func (userApi *UserApi) ForgotPassword(c *gin.Context) {
 }
 
 func (userApi *UserApi) AskForVip(c *gin.Context) {
-
+	var req request.AskForVip
+	err := c.ShouldBind(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	err = userService.AskForVip(req)
+	if err != nil {
+		global.Log.Error("申请失败：", zap.Error(err))
+		response.FailWithMessage("申请失败", c)
+		return
+	}
+	response.OkWithMessage("User deleted successfully", c)
 }
 
 func (userApi *UserApi) Logout(c *gin.Context) {

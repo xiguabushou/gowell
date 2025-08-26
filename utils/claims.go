@@ -1,18 +1,22 @@
 package utils
 
 import (
-	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"goMedia/global"
 	"goMedia/model/appTypes"
 	"goMedia/model/request"
 	"net"
+
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 // GetAccessToken 从请求头获取Access Token
 func GetAccessToken(c *gin.Context) string {
 	// 获取x-access-token头部值
 	token := c.Request.Header.Get("x-access-token")
+	if len(token) >= 2 && token[0] == '"' && token[len(token)-1] == '"' {
+		return token[1 : len(token)-1]
+	}
 	return token
 }
 

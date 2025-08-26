@@ -3,10 +3,12 @@ package flag
 import (
 	"errors"
 	"fmt"
-	"github.com/gofrs/uuid"
 	"goMedia/global"
 	"goMedia/model/appTypes"
 	"goMedia/model/database"
+	"goMedia/utils"
+
+	"github.com/gofrs/uuid"
 )
 
 // Admin 用于创建一个管理员用户
@@ -24,7 +26,7 @@ func Admin() error {
 
 	// 提示用户输入密码
 	fmt.Println("Enter password: ")
-	// 读取用户输入的邮箱
+	// 读取用户输入密码
 	var password string
 	_, err = fmt.Scanln(&password)
 	if err != nil {
@@ -32,7 +34,7 @@ func Admin() error {
 	}
 
 	fmt.Println("Enter password again: ")
-	// 读取用户输入的邮箱
+	// 读取用户输入密码
 	var password2 string
 	_, err = fmt.Scanln(&password2)
 	if err != nil {
@@ -46,6 +48,8 @@ func Admin() error {
 		return err
 	}
 
+	// TODO 检测用户是否已存在
+
 	NewUUID, err := uuid.NewV4()
 	if err != nil {
 		return fmt.Errorf("failed to create UUID: %w", err)
@@ -54,13 +58,13 @@ func Admin() error {
 	// 填充用户数据
 	user.UUID = NewUUID.String()
 	user.Email = email
-	user.Password = password
+	user.Password = utils.BcryptHash(password)
 	user.RoleID = appTypes.Admin
 	user.Freeze = appTypes.UnFreeze
 
 	// 在数据库中创建管理员用户
 	if err := global.DB.Create(&user).Error; err != nil {
-		return fmt.Errorf("failed to create user: %w", err)
+		return fmt.Errorf("创建管理员失败: %w", err)
 	}
 	return nil
 }

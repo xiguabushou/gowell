@@ -2,10 +2,12 @@ package middleware
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
+	"fmt"
 	"goMedia/model/response"
 	"goMedia/service"
 	"goMedia/utils"
+
+	"github.com/gin-gonic/gin"
 )
 
 var jwtService = service.ServiceGroupApp.JwtService
@@ -31,6 +33,7 @@ func JWTAuth() gin.HandlerFunc {
 				c.Abort()
 				return
 			}
+			fmt.Println(accessToken)
 			utils.ClearAccessToken(c)
 			response.NoAuth("Parse access token error", c)
 			c.Abort()

@@ -12,7 +12,6 @@ func (u *UserRouter) InitUserRouter(PublicRouter *gin.RouterGroup, UserRouter *g
 	userLoginRouter := PublicRouter.Group("user").Use(middleware.LoginRecord())
 	userPublicRouter := PublicRouter.Group("user")
 	userUserRouter := UserRouter.Group("user")
-	//userVipRouter := VipRouter.Group("user")
 	userAdminRouter := AdminRouter.Group("user")
 	userApi := api.ApiGroupApp.UserApi
 	{

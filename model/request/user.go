@@ -60,3 +60,8 @@ type ResetForgotPassword struct {
 	Token       string `json:"token"`
 	NewPassword string `json:"new_password"`
 }
+
+type AskForVip struct {
+	Message string `json:"message" binding:"len <= 100"`
+	UUID    string `json:"uuid" binding:"required"`
+}
