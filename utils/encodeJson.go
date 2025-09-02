@@ -30,3 +30,12 @@ func EncodeJson(input string)([]byte ,error){
     }
 	return  jsonData, nil
 }
+
+func UnencodeJson(jsonData []byte)([]string,error){
+    var str []string
+    err := json.Unmarshal(jsonData,&str)
+    if err != nil {
+        return nil,err  
+    }
+    return str,nil
+}

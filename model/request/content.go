@@ -1,6 +1,5 @@
 package request
 
-
-type Video struct{
-	UID string `json:"uid"`
+type GetInfo struct {
+	UID string `json:"uid" form:"uid"`
 }

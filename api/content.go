@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"goMedia/global"
 	"goMedia/model/request"
 	"goMedia/model/response"
@@ -11,7 +12,7 @@ import (
 
 type ContentApi struct{}
 
-func (contentApi *ContentApi) Home(c *gin.Context) {
+func (contentApi *ContentApi) GetList(c *gin.Context) {
 	var pageInfo request.PageInfo
 	err := c.ShouldBindQuery(&pageInfo)
 	if err != nil {
@@ -19,7 +20,7 @@ func (contentApi *ContentApi) Home(c *gin.Context) {
 		return
 	}
 
-	list, total, err := contentService.Home(pageInfo)
+	list, total, err := contentService.GetList(pageInfo)
 	if err != nil {
 		global.Log.Error("Failed to get user list:", zap.Error(err))
 		response.FailWithMessage("Failed to get user list", c)
@@ -32,26 +33,24 @@ func (contentApi *ContentApi) Home(c *gin.Context) {
 	}, c)
 }
 
-func (contentApi *ContentApi) Video(c *gin.Context) {
-	var req request.Video
-	err := c.ShouldBindJSON(&req)
-	if err != nil  {
+func (contentApi *ContentApi) GetInfo(c *gin.Context) {
+	var req request.GetInfo
+	err := c.ShouldBindQuery(&req)
+	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
 
-	result, err := contentService.Video(req.UID)
-	if err != nil {
-		global.Log.Error("Failed to get video:", zap.Error(err))
-		response.FailWithMessage("Failed to get vide ", c)
+	fmt.Println(req.UID)
+	res, err := contentService.GetInfo(req.UID)
+	if err != nil{
+		global.Log.Error("Failed to get content info:", zap.Error(err))
+		response.FailWithMessage("Failed to get content info", c)
 		return
 	}
-	response.OkWithData(result,c)
+
+	response.OkWithData(res,c)
 }
-
-func (contentApi *ContentApi) Photo(c *gin.Context) {
-
-}	
 
 func (contentApi *ContentApi) Search(c *gin.Context) {
 
@@ -113,6 +112,6 @@ func (contentApi *ContentApi) EditPhoto(c *gin.Context) {
 
 }
 
-func (contentApi *ContentApi) List(c *gin.Context) {
+func (contentApi *ContentApi) ListByAdmin(c *gin.Context) {
 
 }

@@ -19,8 +19,12 @@ import (
 
 type ContentService struct{}
 
-func (contentService *ContentService) Home(info request.PageInfo) (interface{}, int64, error) {
+func (contentService *ContentService) GetList(info request.PageInfo) (interface{}, int64, error) {
 	db := global.DB
+
+	if info.TypeID == appTypes.VIDEO || info.TypeID == appTypes.PHOTO {
+		db = db.Where("type_id = ?", info.TypeID)
+	}
 
 	option := other.MySQLOption{
 		PageInfo: info,
@@ -30,39 +34,44 @@ func (contentService *ContentService) Home(info request.PageInfo) (interface{}, 
 	return utils.MySQLPagination(&database.Content{}, option)
 }
 
-func (contentService *ContentService) Video(uid string) (resoult response.GetVideo,err error){
+func (contentService *ContentService) GetInfo(uid string) (response.GetInfo, error) {
 	var content database.Content
 	if err := global.DB.Where("uid = ? ", uid).First(&content).Error; err != nil {
-		return response.GetVideo{}, err
+		return response.GetInfo{}, err
 	}
 
 	var contentList []response.RecommendedList
 	sql := `
         SELECT 
-            t1.name,
-            t1.keywords,
+            *,
             (
                 SELECT COUNT(*)
-                FROM JSON_TABLE(t1.keywords, '$[*]' COLUMNS (kw VARCHAR(50) PATH '$')) AS jt1
+                FROM JSON_TABLE(t1.tags, '$[*]' COLUMNS (kw VARCHAR(50) PATH '$')) AS jt1
                 WHERE JSON_CONTAINS(
-                    (SELECT keywords FROM my_table WHERE name = ?),
+                    (SELECT tags FROM contents WHERE uid = ?),
                     JSON_QUOTE(jt1.kw)
                 )
             ) AS match_count
-        FROM my_table t1
-        WHERE t1.name != ?
+        FROM contents t1
+        WHERE t1.uid != ?
         ORDER BY match_count DESC, t1.id
         LIMIT 6`
-	if err := global.DB.Raw(sql,uid,uid).Scan(&contentList).Error; err != nil{
-		return response.GetVideo{} ,err
+	if err := global.DB.Raw(sql, uid, uid).Scan(&contentList).Error; err != nil {
+		return response.GetInfo{}, err
 	}
 
-	resoult = response.GetVideo{
-		Title: content.Title,
-		Video: content.UID,
+	tags, err := utils.UnencodeJson(content.Tags)
+	if err != nil {
+		return response.GetInfo{}, nil
+	}
+
+	var resoult = response.GetInfo{
+		Title:           content.Title,
+		Video:           content.UID,
+		Tags:            tags,
 		RecommendedList: contentList,
 	}
-	return resoult,nil
+	return resoult, nil
 }
 
 func (contentService *ContentService) Photo() {
@@ -75,22 +84,22 @@ func (contentService *ContentService) Search() {
 
 func (contentService *ContentService) UploadVideo(title string, tags string, file *multipart.FileHeader, cover *multipart.FileHeader, c *gin.Context) error {
 	NewUUID := uuid.Must(uuid.NewV4()).String()
-	err := global.DB.Transaction(func(tx *gorm.DB) error{
+	err := global.DB.Transaction(func(tx *gorm.DB) error {
 		unionTags, err := utils.EncodeJson(tags)
-		if err !=nil {
+		if err != nil {
 			return err
 		}
 		var newContent = database.Content{
-			UID: NewUUID,
+			UID:    NewUUID,
 			TypeID: appTypes.VIDEO,
-			Title: title,
-			Tags: unionTags,
+			Title:  title,
+			Tags:   unionTags,
 		}
 
-		if err := c.SaveUploadedFile(cover,"uploads/video/" + NewUUID + "/cover.png"); err != nil {
+		if err := c.SaveUploadedFile(cover, "uploads/video/"+NewUUID+"/cover.png"); err != nil {
 			return errors.New("failed to save uploaded file")
 		}
-		if err := c.SaveUploadedFile(file,"uploads/video/" + NewUUID + "/video.mp4"); err != nil {
+		if err := c.SaveUploadedFile(file, "uploads/video/"+NewUUID+"/video.mp4"); err != nil {
 			return errors.New("failed to save uploaded file")
 		}
 
@@ -109,38 +118,38 @@ func (contentService *ContentService) UploadVideo(title string, tags string, fil
 
 func (contentService *ContentService) UploadPhoto(title string, tags string, files []*multipart.FileHeader, cover *multipart.FileHeader, c *gin.Context) error {
 	NewUUID := uuid.Must(uuid.NewV4()).String()
-	err := global.DB.Transaction(func (tx *gorm.DB)error{
-		unionTags, err:= utils.EncodeJson(tags)
-		if err!=nil {
+	err := global.DB.Transaction(func(tx *gorm.DB) error {
+		unionTags, err := utils.EncodeJson(tags)
+		if err != nil {
 			return err
 		}
 		num := 0
 
-		if err:= c.SaveUploadedFile(cover,"uploads/photo/" + NewUUID + "/cover.png");err != nil {
+		if err := c.SaveUploadedFile(cover, "uploads/photo/"+NewUUID+"/cover.png"); err != nil {
 			return err
 		}
 		for _, v := range files {
 			photoID := uuid.Must(uuid.NewV4()).String()
-			if err:= c.SaveUploadedFile(v,"uploads/photo/" + NewUUID + "/" + photoID + ".png");err != nil{
+			if err := c.SaveUploadedFile(v, "uploads/photo/"+NewUUID+"/"+photoID+".png"); err != nil {
 				return err
 			}
-			num ++
+			num++
 			var newPhoto = database.Photo{
-				UID: NewUUID,
+				UID:     NewUUID,
 				ImageID: photoID,
 			}
-		 	err := global.DB.Create(&newPhoto).Error
-			if err!= nil{
+			err := global.DB.Create(&newPhoto).Error
+			if err != nil {
 				return err
 			}
-		
+
 		}
 
 		var newContent = database.Content{
-			UID: NewUUID,
+			UID:    NewUUID,
 			TypeID: appTypes.PHOTO,
-			Title: title,
-			Tags: unionTags,
+			Title:  title,
+			Tags:   unionTags,
 			Number: num,
 		}
 		err = global.DB.Create(&newContent).Error
@@ -161,6 +170,6 @@ func (contentService *ContentService) EditPhoto() {
 
 }
 
-func (contentService *ContentService) List() {
+func (contentService *ContentService) ListByAdmin() {
 
 }
