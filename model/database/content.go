@@ -5,13 +5,13 @@ import (
 	"time"
 )
 
-type Content struct{
-	ID        uint `json:"id" gorm:"primarykey"`
-	UID string `json:"uid"`
-	TypeID appTypes.TypeID `json:"type_id"`
+type Content struct {
+	ID        uint            `json:"id" gorm:"primarykey"`
+	UID       string          `json:"uid"`
+	TypeID    appTypes.TypeID `json:"type_id"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	Title string `json:"title"`
-	Tags string `json:"tags"`
-	Number int `json:"number"`
+	Title     string `json:"title"`
+	Tags      []byte `json:"tags" gorm:"type:json"`
+	Number    int    `json:"number"`
 }

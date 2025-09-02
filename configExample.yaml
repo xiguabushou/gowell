@@ -1,0 +1,48 @@
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  config: charset=utf8mb4&parseTime=True&loc=Local
+  db_name: media
+  username: root
+  password: 123456
+  max_idle_conns: 10
+  max_open_conns: 100
+  log_mode: info
+zap:
+  level: info
+  filename: log/goMedia.log
+  max_size: 200
+  max_backups: 30
+  max_age: 5
+  is_console_print: true
+jwt:
+  token_secret: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  token_expiry_time: 2h
+  issuer: go_blog
+system:
+  host: 0.0.0.0
+  port: 8888
+  env: release
+  router_prefix: api
+  use_multipoint: true
+  sessions_secret: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  forgot_password_url: http://127.0.0.1:8080/resetForgotPassword
+upload:
+  size: 20
+  path: uploads
+captcha:
+  height: 80
+  width: 240
+  length: 6
+  max_skew: 0.7
+  dot_count: 80
+email:
+  host: smtp.qq.com
+  port: 465
+  from: 123456789@qq.com
+  nickname: kelin
+  secret: abcdefg123456
+  is_ssl: true
+gaode:
+  enable: true
+  key: abcdefg123456

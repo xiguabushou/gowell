@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+	initialize.InitLogo()
 	global.Config = core.InitConfig()
 	global.Log = core.InitLogger()
 	initialize.OtherInit()

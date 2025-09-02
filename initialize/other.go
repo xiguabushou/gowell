@@ -1,10 +1,12 @@
 package initialize
 
 import (
-	"go.uber.org/zap"
+	"fmt"
 	"goMedia/global"
 	"goMedia/utils"
 	"os"
+
+	"go.uber.org/zap"
 
 	"github.com/songzhibin97/gkit/cache/local_cache"
 )
@@ -22,4 +24,24 @@ func OtherInit() {
 	global.BlackCache = local_cache.NewCache(
 		local_cache.SetDefaultExpire(TokenExpiry),
 	)
+}
+
+func InitLogo() {
+    LOGO := "                                                                \n" +
+        "                                                                \n" +
+        "                                               ,--,    ,--,    \n" +
+        "                                             ,--.'|  ,--.'|    \n" +
+        "              ,---.           .---.          |  | :  |  | :    \n" +
+        "  ,----._,.  '   ,\\'         /. ./|          :  : '  :  : '    \n" +
+        " /   /  ' / /   /   |     .-'-. ' |   ,---.  |  ' |  |  ' |    \n" +
+        "|   :     |.   ; ,. :    /___/ \\: |  /     \\ '  | |  '  | |    \n" +
+        "|   | .\\  .'   | |: : .-'.. '   ' . /    /  ||  | :  |  | :    \n" +
+        ".   ; ';  |'   | .; :/___/ \\:     '.    ' / |'  : |__'  : |__  \n" +
+        "'   .   . ||   :    |.   \\  ' .\\   '   ;   /||  | '.'|  | '.'| \n" +
+        " `---`-'| | \\   \\  /  \\   \\   ' \\ |'   |  / |;  :    ;  :    ; \n" + 
+        " .'__/\\_: |  `----'    \\   \\  |--\" |   :    ||  ,   /|  ,   /  \n" +
+        " |   :    :             \\   \\ |     \\   \\  /  ---`-'  ---`-'   \n" +
+        "  \\   \\  /               '---\"       `----'                    \n" +
+        "   `--`-'                                                      \n"
+    fmt.Println(LOGO)
 }
