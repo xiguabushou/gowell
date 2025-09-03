@@ -15,13 +15,10 @@ func (c ContentRouter) InitContentRouter(VipRouter *gin.RouterGroup, AdminRouter
 	{
 		contentVipRouter.GET("getList", contentApi.GetList)
 		contentVipRouter.GET("getInfo", contentApi.GetInfo)
-		contentVipRouter.GET("search", contentApi.Search)
 	}
 	{
 		contentAdminRouter.POST("uploadVideo", contentApi.UploadVideo)
 		contentAdminRouter.POST("uploadPhoto", contentApi.UploadPhoto)
-		contentAdminRouter.POST("editVideo", contentApi.EditVideo)
-		contentAdminRouter.POST("editPhoto", contentApi.EditPhoto)
 		contentAdminRouter.POST("listByAdmin", contentApi.ListByAdmin)
 	}
 }

@@ -13,14 +13,14 @@ import (
 type ContentApi struct{}
 
 func (contentApi *ContentApi) GetList(c *gin.Context) {
-	var pageInfo request.PageInfo
-	err := c.ShouldBindQuery(&pageInfo)
+	var req request.GetList
+	err := c.ShouldBindQuery(&req)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
 
-	list, total, err := contentService.GetList(pageInfo)
+	list, total, err := contentService.GetList(req)
 	if err != nil {
 		global.Log.Error("Failed to get user list:", zap.Error(err))
 		response.FailWithMessage("Failed to get user list", c)
@@ -52,9 +52,6 @@ func (contentApi *ContentApi) GetInfo(c *gin.Context) {
 	response.OkWithData(res,c)
 }
 
-func (contentApi *ContentApi) Search(c *gin.Context) {
-
-}
 
 func (contentApi *ContentApi) UploadVideo(c *gin.Context) {
 
@@ -104,14 +101,23 @@ func (contentApi *ContentApi) UploadPhoto(c *gin.Context) {
 
 }
 
-func (contentApi *ContentApi) EditVideo(c *gin.Context) {
-
-}
-
-func (contentApi *ContentApi) EditPhoto(c *gin.Context) {
-
-}
-
 func (contentApi *ContentApi) ListByAdmin(c *gin.Context) {
+	var req request.ListByAdmin
+	err := c.ShouldBindQuery(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
 
+	list, total, err := contentService.ListByAdmin(req)
+	if err != nil {
+		global.Log.Error("Failed to get user list:", zap.Error(err))
+		response.FailWithMessage("Failed to get user list", c)
+		return
+	}
+
+	response.OkWithData(response.PageResult{
+		List:  list,
+		Total: total,
+	}, c)
 }

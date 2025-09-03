@@ -4,6 +4,6 @@ package appTypes
 type TypeID int
 
 const (
-	VIDEO TypeID=iota //视频
-	PHOTO   //图集
+	VIDEO = 1  //视频
+	PHOTO = 2  //图集
 )

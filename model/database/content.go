@@ -14,4 +14,5 @@ type Content struct {
 	Title     string `json:"title"`
 	Tags      []byte `json:"tags" gorm:"type:json"`
 	Number    int    `json:"number"`
+	Freeze    bool   `json:"freeze"`
 }

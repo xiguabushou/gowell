@@ -19,15 +19,30 @@ import (
 
 type ContentService struct{}
 
-func (contentService *ContentService) GetList(info request.PageInfo) (interface{}, int64, error) {
+func (contentService *ContentService) GetList(info request.GetList) (any, int64, error) {
 	db := global.DB
 
-	if info.TypeID == appTypes.VIDEO || info.TypeID == appTypes.PHOTO {
-		db = db.Where("type_id = ?", info.TypeID)
+	if info.Keyword == "" {
+		if info.TypeID == appTypes.VIDEO || info.TypeID == appTypes.PHOTO {
+			db = db.Where("type_id = ? and freeze = ?", info.TypeID, appTypes.UnFreeze)
+		}else {
+			db = db.Where("freeze = ?",appTypes.UnFreeze)
+		}
+	}else{
+		if info.TypeID == appTypes.VIDEO || info.TypeID == appTypes.PHOTO {
+			db = db.Where("type_id = ? and freeze = ? and (title like ? or tags like ?)", info.TypeID, appTypes.UnFreeze,"%"+info.Keyword+"%","%"+info.Keyword+"%")
+		}else {
+			db = db.Where("freeze = ? and (title like ? or tags like ?)",appTypes.UnFreeze,"%"+info.Keyword+"%","%"+info.Keyword+"%")
+		}
+	}
+
+	var pageinfo = request.PageInfo{
+		Page:     info.Page,
+		PageSize: info.PageSize,
 	}
 
 	option := other.MySQLOption{
-		PageInfo: info,
+		PageInfo: pageinfo,
 		Where:    db,
 	}
 
@@ -36,7 +51,7 @@ func (contentService *ContentService) GetList(info request.PageInfo) (interface{
 
 func (contentService *ContentService) GetInfo(uid string) (response.GetInfo, error) {
 	var content database.Content
-	if err := global.DB.Where("uid = ? ", uid).First(&content).Error; err != nil {
+	if err := global.DB.Where("uid = ? and freeze = ?", uid, appTypes.UnFreeze).First(&content).Error; err != nil {
 		return response.GetInfo{}, err
 	}
 
@@ -53,10 +68,10 @@ func (contentService *ContentService) GetInfo(uid string) (response.GetInfo, err
                 )
             ) AS match_count
         FROM contents t1
-        WHERE t1.uid != ?
+        WHERE t1.uid != ? and t1.freeze = ?
         ORDER BY match_count DESC, t1.id
         LIMIT 6`
-	if err := global.DB.Raw(sql, uid, uid).Scan(&contentList).Error; err != nil {
+	if err := global.DB.Raw(sql, uid, uid, appTypes.UnFreeze).Scan(&contentList).Error; err != nil {
 		return response.GetInfo{}, err
 	}
 
@@ -74,14 +89,6 @@ func (contentService *ContentService) GetInfo(uid string) (response.GetInfo, err
 	return resoult, nil
 }
 
-func (contentService *ContentService) Photo() {
-
-}
-
-func (contentService *ContentService) Search() {
-
-}
-
 func (contentService *ContentService) UploadVideo(title string, tags string, file *multipart.FileHeader, cover *multipart.FileHeader, c *gin.Context) error {
 	NewUUID := uuid.Must(uuid.NewV4()).String()
 	err := global.DB.Transaction(func(tx *gorm.DB) error {
@@ -94,6 +101,7 @@ func (contentService *ContentService) UploadVideo(title string, tags string, fil
 			TypeID: appTypes.VIDEO,
 			Title:  title,
 			Tags:   unionTags,
+			Freeze: appTypes.UnFreeze,
 		}
 
 		if err := c.SaveUploadedFile(cover, "uploads/video/"+NewUUID+"/cover.png"); err != nil {
@@ -151,6 +159,7 @@ func (contentService *ContentService) UploadPhoto(title string, tags string, fil
 			Title:  title,
 			Tags:   unionTags,
 			Number: num,
+			Freeze: appTypes.UnFreeze,
 		}
 		err = global.DB.Create(&newContent).Error
 		return err
@@ -162,14 +171,21 @@ func (contentService *ContentService) UploadPhoto(title string, tags string, fil
 	return nil
 }
 
-func (contentService *ContentService) EditVideo() {
+func (contentService *ContentService) ListByAdmin(info request.ListByAdmin) (any, int64, error) {
+	db := global.DB
 
-}
+	if info.TypeID == appTypes.VIDEO || info.TypeID == appTypes.PHOTO {
+		db = db.Where("type_id = ? and freeze = ?", info.TypeID, info.Freeze)
+	}
+	var pageinfo = request.PageInfo{
+		Page:     info.Page,
+		PageSize: info.PageSize,
+	}
 
-func (contentService *ContentService) EditPhoto() {
+	option := other.MySQLOption{
+		PageInfo: pageinfo,
+		Where:    db,
+	}
 
-}
-
-func (contentService *ContentService) ListByAdmin() {
-
+	return utils.MySQLPagination(&database.Content{}, option)
 }

@@ -1,9 +1,10 @@
 package router
 
 import (
-	"github.com/gin-gonic/gin"
 	"goMedia/api"
 	"goMedia/middleware"
+
+	"github.com/gin-gonic/gin"
 )
 
 type UserRouter struct{}
@@ -37,5 +38,4 @@ func (u *UserRouter) InitUserRouter(PublicRouter *gin.RouterGroup, UserRouter *g
 		userAdminRouter.POST("unfreeze", userApi.UserUnfreeze)
 		userAdminRouter.GET("loginList", userApi.UserLoginList)
 	}
-
 }
