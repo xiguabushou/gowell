@@ -224,8 +224,19 @@ func (userService *UserService) AskForVip(req request.AskForVip) error {
 	var newAskForVip = database.AskForVip {
 		Message: req.Message,
 		UUID: req.UUID,
-		CreateTime: time.Now(),
 	}
 
 	return global.DB.Create(&newAskForVip).Error
+}
+
+func (userService *UserService)GetListAboutAskForVip(info request.PageInfo)(any, int64, error){
+	db := global.DB
+	db = db.Where("finish_at is NULL")
+
+	var options = other.MySQLOption{
+		PageInfo: info,
+		Where: db,
+	}
+
+	return utils.MySQLPagination(&database.AskForVip{},options)
 }

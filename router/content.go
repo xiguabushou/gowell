@@ -20,5 +20,8 @@ func (c ContentRouter) InitContentRouter(VipRouter *gin.RouterGroup, AdminRouter
 		contentAdminRouter.POST("uploadVideo", contentApi.UploadVideo)
 		contentAdminRouter.POST("uploadPhoto", contentApi.UploadPhoto)
 		contentAdminRouter.POST("listByAdmin", contentApi.ListByAdmin)
+		contentAdminRouter.POST("freeze", contentApi.Freeze)
+		contentAdminRouter.POST("unfreeze",contentApi.UnFreeze)
+		contentAdminRouter.POST("delete",contentApi.Delete)
 	}
 }

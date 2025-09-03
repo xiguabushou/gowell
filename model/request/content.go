@@ -18,3 +18,7 @@ type ListByAdmin struct {
 	Freeze  appTypes.FreezeID `json:"freeze" form:"freeze"`
 	Keyword string            `json:"keyword" form:"keyword"`
 }
+
+type GetID struct {
+	UID string `json:"uid" form:"uid"`
+}

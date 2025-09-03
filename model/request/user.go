@@ -1,6 +1,9 @@
 package request
 
-import "goMedia/model/appTypes"
+import (
+	"goMedia/model/appTypes"
+	"time"
+)
 
 type Register struct {
 	Password         string `json:"password" binding:"required,min=6,max=16"`
@@ -64,4 +67,10 @@ type ResetForgotPassword struct {
 type AskForVip struct {
 	Message string `json:"message" binding:"len <= 100"`
 	UUID    string `json:"uuid" binding:"required"`
+}
+
+type GetListAboutAskForVip struct{
+	UUID       string    `json:"uuid" `
+	Message    string    `json:"message"`
+	CreatedAt  time.Time `json:"created_at"`
 }

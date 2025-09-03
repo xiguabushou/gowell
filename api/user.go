@@ -299,6 +299,25 @@ func (userApi *UserApi) UserLoginList(c *gin.Context) {
 	}, c)
 }
 
+func (UserApi *UserApi)GetListAboutAskForVip(c *gin.Context){
+	var pageInfo request.PageInfo
+	err := c.ShouldBindQuery(&pageInfo)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	list, total, err := userService.GetListAboutAskForVip(pageInfo)
+	if err != nil {
+		global.Log.Error("Failed to get ask for vip list:", zap.Error(err))
+		response.FailWithMessage("Failed to get ask for vip list", c)
+		return
+	}
+	response.OkWithData(response.PageResult{
+		List:  list,
+		Total: total,
+	}, c)
+}
+
 func (userApi *UserApi) ResetForgotPassword(c *gin.Context) {
 	var req request.ResetForgotPassword
 	err := c.ShouldBindJSON(&req)

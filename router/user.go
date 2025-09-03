@@ -37,5 +37,6 @@ func (u *UserRouter) InitUserRouter(PublicRouter *gin.RouterGroup, UserRouter *g
 		userAdminRouter.POST("freeze", userApi.UserFreeze)
 		userAdminRouter.POST("unfreeze", userApi.UserUnfreeze)
 		userAdminRouter.GET("loginList", userApi.UserLoginList)
+		userAdminRouter.GET("getListAboutAskForVip",userApi.GetListAboutAskForVip)
 	}
 }

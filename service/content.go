@@ -25,14 +25,14 @@ func (contentService *ContentService) GetList(info request.GetList) (any, int64,
 	if info.Keyword == "" {
 		if info.TypeID == appTypes.VIDEO || info.TypeID == appTypes.PHOTO {
 			db = db.Where("type_id = ? and freeze = ?", info.TypeID, appTypes.UnFreeze)
-		}else {
-			db = db.Where("freeze = ?",appTypes.UnFreeze)
+		} else {
+			db = db.Where("freeze = ?", appTypes.UnFreeze)
 		}
-	}else{
+	} else {
 		if info.TypeID == appTypes.VIDEO || info.TypeID == appTypes.PHOTO {
-			db = db.Where("type_id = ? and freeze = ? and (title like ? or tags like ?)", info.TypeID, appTypes.UnFreeze,"%"+info.Keyword+"%","%"+info.Keyword+"%")
-		}else {
-			db = db.Where("freeze = ? and (title like ? or tags like ?)",appTypes.UnFreeze,"%"+info.Keyword+"%","%"+info.Keyword+"%")
+			db = db.Where("type_id = ? and freeze = ? and (title like ? or tags like ?)", info.TypeID, appTypes.UnFreeze, "%"+info.Keyword+"%", "%"+info.Keyword+"%")
+		} else {
+			db = db.Where("freeze = ? and (title like ? or tags like ?)", appTypes.UnFreeze, "%"+info.Keyword+"%", "%"+info.Keyword+"%")
 		}
 	}
 
@@ -111,13 +111,13 @@ func (contentService *ContentService) UploadVideo(title string, tags string, fil
 			return errors.New("failed to save uploaded file")
 		}
 
-		if err := global.DB.Create(&newContent).Error; err != nil {
+		if err := tx.Create(&newContent).Error; err != nil {
 			return err
 		}
 		return nil
 	})
 	if err != nil {
-		os.Remove("uploads/video/" + NewUUID)
+		os.RemoveAll("uploads/video/" + NewUUID)
 		return err
 	}
 
@@ -146,7 +146,7 @@ func (contentService *ContentService) UploadPhoto(title string, tags string, fil
 				UID:     NewUUID,
 				ImageID: photoID,
 			}
-			err := global.DB.Create(&newPhoto).Error
+			err := tx.Create(&newPhoto).Error
 			if err != nil {
 				return err
 			}
@@ -161,11 +161,11 @@ func (contentService *ContentService) UploadPhoto(title string, tags string, fil
 			Number: num,
 			Freeze: appTypes.UnFreeze,
 		}
-		err = global.DB.Create(&newContent).Error
+		err = tx.Create(&newContent).Error
 		return err
 	})
 	if err != nil {
-		os.Remove("uploads/photo" + NewUUID)
+		os.RemoveAll("uploads/photo" + NewUUID)
 		return err
 	}
 	return nil
@@ -188,4 +188,32 @@ func (contentService *ContentService) ListByAdmin(info request.ListByAdmin) (any
 	}
 
 	return utils.MySQLPagination(&database.Content{}, option)
+}
+
+func (contentService *ContentService) Freeze(uid string) error {
+	var content database.Content
+	return global.DB.Where("uid = ?", uid).First(&content).Update("freeze", appTypes.Freeze).Error
+}
+
+func (contentService *ContentService) UnFreeze(uid string) error {
+	var content database.Content
+	return global.DB.Where("uid = ?", uid).First(&content).Update("freeze", appTypes.UnFreeze).Error
+}
+
+func (contentService *ContentService) Delete(uid string) error {
+	return  global.DB.Transaction( func(tx *gorm.DB) error {
+		var content database.Content
+		err := tx.Where("uid = ?",uid).First(&content).Error
+		if err != nil {
+			return err
+		}
+
+		if content.TypeID == appTypes.PHOTO{
+			os.RemoveAll("uploads/photo/" + uid)
+		}
+		if content.TypeID == appTypes.VIDEO{
+			os.RemoveAll("uploads/video/" + uid)
+		}
+		return nil
+	})
 }

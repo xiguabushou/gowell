@@ -121,3 +121,48 @@ func (contentApi *ContentApi) ListByAdmin(c *gin.Context) {
 		Total: total,
 	}, c)
 }
+
+func (contentApi *ContentApi)Freeze(c *gin.Context){
+	var req request.GetID
+	err:= c.ShouldBindJSON(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	if err := contentService.Freeze(req.UID);err != nil{
+		global.Log.Error("Failed to get freeze:", zap.Error(err))
+		response.FailWithMessage("Failed to get freeze", c)
+		return
+	}
+	response.Ok(c)
+}
+
+func (contentApi *ContentApi)UnFreeze(c *gin.Context){
+	var req request.GetID
+	err:= c.ShouldBindJSON(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	if err := contentService.UnFreeze(req.UID);err != nil{
+		global.Log.Error("Failed to unfreeze:", zap.Error(err))
+		response.FailWithMessage("Failed to unfreeze", c)
+		return
+	}
+	response.Ok(c)
+}
+
+func (contentApi *ContentApi)Delete(c *gin.Context){
+	var req request.GetID
+	err:= c.ShouldBindJSON(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	if err := contentService.Delete(req.UID);err != nil{
+		global.Log.Error("Failed to delete:", zap.Error(err))
+		response.FailWithMessage("Failed to delete", c)
+		return
+	}
+	response.Ok(c)
+}
