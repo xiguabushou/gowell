@@ -26,5 +26,5 @@ type GetID struct {
 type EditTitleAndTags struct {
 	UID   string `json:"uid"`
 	Title string `json:"title"`
-	Tags  string `json:""tags`
+	Tags  string `json:"tags"`
 }
