@@ -214,7 +214,7 @@ func (contentService *ContentService) Delete(uid string) error {
 		if content.TypeID == appTypes.VIDEO {
 			os.RemoveAll("uploads/video/" + uid)
 		}
-		return nil
+		return global.DB.Where("uid = ?", uid).Delete(&database.Content{}).Error
 	})
 }
 
@@ -234,19 +234,84 @@ func (contentService *ContentService) EditTitleAndTags(req request.EditTitleAndT
 	return global.DB.Save(&content).Error
 }
 
-func (contentService *ContentService) DeleteContentVideo() error {
+func (contentService *ContentService) DeleteContentVideo(req request.DeleteContentVideo) error {
+	return os.Remove("uploads/video/" + req.UID + "/" + req.Name)
+}
 
+func (contentService *ContentService) DeleteContentPhoto(req request.DeleteContentPhoto) error {
+	for _, mId := range req.ImageID {
+		err := global.DB.Where("image_id = ?", mId).Delete(&database.Photo{}).Error
+		if err != nil {
+			return err
+		}
+
+		err = os.Remove("uploads/photo" + req.UID + "/" + mId + ".png")
+		if err != nil {
+			return err
+		}
+	}
+
+	num := len(req.ImageID)
+	var content database.Content
+	if err := global.DB.Where("uid = ?", req.UID).First(&content).Error; err != nil {
+		return err
+	}
+	content.Number = content.Number - num
+	return global.DB.Save(&content).Error
+}
+
+func (contentService *ContentService) UploadContentVideo(uid string, typeId string, file *multipart.FileHeader, c *gin.Context) error {
+	if typeId == "cover" {
+		err := c.SaveUploadedFile(file, "uploads/video"+uid+"/cover.png")
+		if err != nil {
+			return err
+		}
+	}
+	if typeId == "cover" {
+		err := c.SaveUploadedFile(file, "uploads/video"+uid+"/video.mp4")
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
-func (contentService *ContentService) DeleteContentPhoto() error {
 
-	return nil
-}
-func (contentService *ContentService) UploadContentVideo() error {
+func (contentService *ContentService) UploadContentPhoto(uid string, typeId string, files []*multipart.FileHeader, c *gin.Context) error {
 
-	return nil
-}
-func (contentService *ContentService) UploadContentPhoto() error {
+	if typeId == "cover" {
+		for _, v := range files {
+			if err := c.SaveUploadedFile(v, "uploads/photo/"+uid+"/cover.png"); err != nil {
+				return err
+			}
+		}
+	} else if typeId == "photo" {
+		num := 0
+		for _, v := range files {
+			photoID := uuid.Must(uuid.NewV4()).String()
+			if err := c.SaveUploadedFile(v, "uploads/photo/"+uid+"/"+photoID+".png"); err != nil {
+				return err
+			}
 
+			var newPhoto = database.Photo{
+				UID:     uid,
+				ImageID: photoID,
+			}
+			err := global.DB.Create(&newPhoto).Error
+			if err != nil {
+				return err
+			}
+			num++
+		}
+
+		var content database.Content
+		err := global.DB.Where("uid = ?", uid).First(&content).Error
+		if err != nil {
+			return err
+		}
+		content.Number = content.Number + num
+		return global.DB.Save(&content).Error
+	} else {
+		return errors.New("unknown parameters！")
+	}
 	return nil
 }

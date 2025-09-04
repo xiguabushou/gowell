@@ -28,3 +28,13 @@ type EditTitleAndTags struct {
 	Title string `json:"title"`
 	Tags  string `json:"tags"`
 }
+
+type DeleteContentVideo struct {
+	UID string `json:"uid"`
+	Name string `json:"name"`
+}
+
+type DeleteContentPhoto struct{
+	UID string `json:"uid"`
+	ImageID []string `json:"image_id"`
+}

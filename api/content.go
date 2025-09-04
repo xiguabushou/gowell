@@ -182,17 +182,65 @@ func (contentApi *ContentApi) EditTitleAndTags(c *gin.Context) {
 }
 
 func (contentApi *ContentApi) DeleteContentVideo(c *gin.Context) {
-
+	var req request.DeleteContentVideo
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	if err := contentService.DeleteContentVideo(req); err != nil {
+		global.Log.Error("Delete failed:", zap.Error(err))
+		response.FailWithMessage("Delete failed", c)
+		return
+	}
+	response.Ok(c)
 }
 
 func (contentApi *ContentApi) DeleteContentPhoto(c *gin.Context) {
-
+	var req request.DeleteContentPhoto
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	if err := contentService.DeleteContentPhoto(req); err != nil {
+		global.Log.Error("Delete failed:", zap.Error(err))
+		response.FailWithMessage("Delete failed", c)
+		return
+	}
+	response.Ok(c)
 }
 
 func (contentApi *ContentApi) UploadContentVideo(c *gin.Context) {
+	uid := c.PostForm("uid")
+	typeId := c.PostForm("type_id")
+	file, err := c.FormFile("file")
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	if err := contentService.UploadContentVideo(uid,typeId,file,c); err != nil {
+		global.Log.Error("Upload failed:", zap.Error(err))
+		response.FailWithMessage("Upload failed", c)
+		return
+	}
+	response.Ok(c)
+
 
 }
 
 func (contentApi *ContentApi) UploadContentPhoto(c *gin.Context) {
+	uid := c.PostForm("uid")
+	typeId := c.PostForm("type_id")
 
+	formdata := c.Request.MultipartForm
+	files := formdata.File["files"]
+
+	if err := contentService.UploadContentPhoto(uid,typeId,files,c); err != nil {
+		global.Log.Error("Upload failed:", zap.Error(err))
+		response.FailWithMessage("Upload failed", c)
+		return
+	}
+	response.Ok(c)
 }
