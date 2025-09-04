@@ -65,12 +65,18 @@ type ResetForgotPassword struct {
 }
 
 type AskForVip struct {
-	Message string `json:"message" binding:"len <= 100"`
+	Message string `json:"message" binding:"max=150"`
 	UUID    string `json:"uuid" binding:"required"`
 }
 
-type GetListAboutAskForVip struct{
-	UUID       string    `json:"uuid" `
-	Message    string    `json:"message"`
-	CreatedAt  time.Time `json:"created_at"`
+type GetListAboutAskForVip struct {
+	UUID      string    `json:"uuid" `
+	Message   string    `json:"message"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type ApprovingForVip struct {
+	ApproverUUID string `json:"approver_uuid"`
+	UUID    string `json:"uuid"`
+	IsPass  bool   `json:"is_pass"`
 }

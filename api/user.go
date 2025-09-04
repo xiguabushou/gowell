@@ -160,11 +160,11 @@ func (userApi *UserApi) AskForVip(c *gin.Context) {
 	}
 	err = userService.AskForVip(req)
 	if err != nil {
-		global.Log.Error("申请失败：", zap.Error(err))
-		response.FailWithMessage("申请失败", c)
+		global.Log.Error("Application failed:", zap.Error(err))
+		response.FailWithMessage("Application failed", c)
 		return
 	}
-	response.OkWithMessage("User deleted successfully", c)
+	response.OkWithMessage("The application was successful", c)
 }
 
 func (userApi *UserApi) Logout(c *gin.Context) {
@@ -455,4 +455,22 @@ func (userApi *UserApi) TokenNext(c *gin.Context, user database.User) {
 		AccessTokenExpiresAt: accessClaims.ExpiresAt.Unix() * 1000,
 	}, "Successful login", c)
 	return
+}
+
+
+func (userApi *UserApi) ApprovingForVip(c *gin.Context){
+	var req request.ApprovingForVip
+	err := c.ShouldBind(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	err = userService.ApprovingForVip(req)
+	if err != nil {
+		global.Log.Error("The commit failed:", zap.Error(err))
+		response.FailWithMessage("The commit failed", c)
+		return
+	}
+	response.OkWithMessage("The commit success", c)
+
 }

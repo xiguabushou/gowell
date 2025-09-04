@@ -7,7 +7,7 @@ type AskForVip struct {
 	UUID            string `json:"uuid" `
 	Message         string `json:"message"`
 	CreatedAt       time.Time
-	FinishAt       time.Time `json:"finish_at"`
-	Approver        string `json:"approver"`
-	ApprovalResults string `json:"approval_results"`
+	FinishAt        *time.Time `json:"finish_at"`
+	Approver        string     `json:"approver"`
+	ApprovalResults bool       `json:"approval_results"`
 }

@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"goMedia/global"
+	"goMedia/model/appTypes"
 	"goMedia/model/database"
 	"goMedia/model/other"
 	"goMedia/model/request"
@@ -44,7 +45,7 @@ func (userService *UserService) Login(u database.User) (database.User, error) {
 
 	//记录错误不存在的登录信息
 	var filedLoginMsg = database.FailedLogin{
-		Email: u.Email,
+		Email:    u.Email,
 		Password: u.Password,
 	}
 	global.DB.Create(&filedLoginMsg)
@@ -214,29 +215,63 @@ func (userService *UserService) ResetForgotPassword(req request.ResetForgotPassw
 
 func (userService *UserService) AskForVip(req request.AskForVip) error {
 	var oldAskForVip database.AskForVip
-	
-	err := global.DB.Where("uuid = ?", req.UUID).Where("finish_time is null").First(oldAskForVip).Error
+
+	err := global.DB.Where("uuid = ?", req.UUID).Where("finish_at is null").First(oldAskForVip).Error
 	if err == nil {
 		// 找到了记录，说明存在相同的未完成请求
 		return errors.New("the same request already exists")
 	}
 
-	var newAskForVip = database.AskForVip {
-		Message: req.Message,
-		UUID: req.UUID,
+	var newAskForVip = database.AskForVip{
+		Message:  req.Message,
+		UUID:     req.UUID,
+		FinishAt: nil,
 	}
 
 	return global.DB.Create(&newAskForVip).Error
 }
 
-func (userService *UserService)GetListAboutAskForVip(info request.PageInfo)(any, int64, error){
+func (userService *UserService) GetListAboutAskForVip(info request.PageInfo) (any, int64, error) {
 	db := global.DB
 	db = db.Where("finish_at is NULL")
 
 	var options = other.MySQLOption{
 		PageInfo: info,
-		Where: db,
+		Where:    db,
 	}
 
-	return utils.MySQLPagination(&database.AskForVip{},options)
+	return utils.MySQLPagination(&database.AskForVip{}, options)
+}
+
+func (userService *UserService) ApprovingForVip(req request.ApprovingForVip) error {
+	return global.DB.Transaction(func(tx *gorm.DB) error {
+		if req.IsPass {
+			var user database.User
+			err := tx.Where("uuid = ?", req.UUID).First(&user).Update("role_id", appTypes.Vip).Error
+			if err != nil {
+				return err
+			}
+			var ask database.AskForVip
+			err = tx.Where("uuid = ? and finish_at is null", req.UUID).First(&ask).Error
+			if err != nil {
+				return err
+			}
+			t := time.Now()
+			ask.FinishAt = &t
+			ask.Approver = req.UUID
+			ask.ApprovalResults = req.IsPass
+			return tx.Save(&ask).Error
+		} else {
+			var ask database.AskForVip
+			err := tx.Where("uuid = ? and finish_at is null").First(&ask).Error
+			if err != nil {
+				return err
+			}
+			t := time.Now()
+			ask.FinishAt = &t
+			ask.Approver = req.ApproverUUID
+			ask.ApprovalResults = req.IsPass
+			return tx.Save(&ask).Error
+		}
+	})
 }

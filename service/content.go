@@ -201,19 +201,52 @@ func (contentService *ContentService) UnFreeze(uid string) error {
 }
 
 func (contentService *ContentService) Delete(uid string) error {
-	return  global.DB.Transaction( func(tx *gorm.DB) error {
+	return global.DB.Transaction(func(tx *gorm.DB) error {
 		var content database.Content
-		err := tx.Where("uid = ?",uid).First(&content).Error
+		err := tx.Where("uid = ?", uid).First(&content).Error
 		if err != nil {
 			return err
 		}
 
-		if content.TypeID == appTypes.PHOTO{
+		if content.TypeID == appTypes.PHOTO {
 			os.RemoveAll("uploads/photo/" + uid)
 		}
-		if content.TypeID == appTypes.VIDEO{
+		if content.TypeID == appTypes.VIDEO {
 			os.RemoveAll("uploads/video/" + uid)
 		}
 		return nil
 	})
+}
+
+func (contentService *ContentService) EditTitleAndTags(req request.EditTitleAndTags) error {
+	unionTags, err := utils.EncodeJson(req.Tags)
+	if err != nil {
+		return err
+	}
+
+	var content database.Content
+	err = global.DB.Where("uid = ?", req.UID).First(&content).Error
+	if err != nil {
+		return err
+	}
+	content.Tags = unionTags
+	content.Title = req.Title
+	return global.DB.Save(&content).Error
+}
+
+func (contentService *ContentService) DeleteContentVideo() error {
+
+	return nil
+}
+func (contentService *ContentService) DeleteContentPhoto() error {
+
+	return nil
+}
+func (contentService *ContentService) UploadContentVideo() error {
+
+	return nil
+}
+func (contentService *ContentService) UploadContentPhoto() error {
+
+	return nil
 }

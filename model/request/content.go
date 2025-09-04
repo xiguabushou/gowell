@@ -22,3 +22,9 @@ type ListByAdmin struct {
 type GetID struct {
 	UID string `json:"uid" form:"uid"`
 }
+
+type EditTitleAndTags struct {
+	UID   string `json:"uid"`
+	Title string `json:"title"`
+	Tags  string `json:""tags`
+}

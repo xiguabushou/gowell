@@ -43,15 +43,14 @@ func (contentApi *ContentApi) GetInfo(c *gin.Context) {
 
 	fmt.Println(req.UID)
 	res, err := contentService.GetInfo(req.UID)
-	if err != nil{
+	if err != nil {
 		global.Log.Error("Failed to get content info:", zap.Error(err))
 		response.FailWithMessage("Failed to get content info", c)
 		return
 	}
 
-	response.OkWithData(res,c)
+	response.OkWithData(res, c)
 }
-
 
 func (contentApi *ContentApi) UploadVideo(c *gin.Context) {
 
@@ -122,14 +121,14 @@ func (contentApi *ContentApi) ListByAdmin(c *gin.Context) {
 	}, c)
 }
 
-func (contentApi *ContentApi)Freeze(c *gin.Context){
+func (contentApi *ContentApi) Freeze(c *gin.Context) {
 	var req request.GetID
-	err:= c.ShouldBindJSON(&req)
+	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	if err := contentService.Freeze(req.UID);err != nil{
+	if err := contentService.Freeze(req.UID); err != nil {
 		global.Log.Error("Failed to get freeze:", zap.Error(err))
 		response.FailWithMessage("Failed to get freeze", c)
 		return
@@ -137,14 +136,14 @@ func (contentApi *ContentApi)Freeze(c *gin.Context){
 	response.Ok(c)
 }
 
-func (contentApi *ContentApi)UnFreeze(c *gin.Context){
+func (contentApi *ContentApi) UnFreeze(c *gin.Context) {
 	var req request.GetID
-	err:= c.ShouldBindJSON(&req)
+	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	if err := contentService.UnFreeze(req.UID);err != nil{
+	if err := contentService.UnFreeze(req.UID); err != nil {
 		global.Log.Error("Failed to unfreeze:", zap.Error(err))
 		response.FailWithMessage("Failed to unfreeze", c)
 		return
@@ -152,17 +151,48 @@ func (contentApi *ContentApi)UnFreeze(c *gin.Context){
 	response.Ok(c)
 }
 
-func (contentApi *ContentApi)Delete(c *gin.Context){
+func (contentApi *ContentApi) Delete(c *gin.Context) {
 	var req request.GetID
-	err:= c.ShouldBindJSON(&req)
+	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	if err := contentService.Delete(req.UID);err != nil{
+	if err := contentService.Delete(req.UID); err != nil {
 		global.Log.Error("Failed to delete:", zap.Error(err))
 		response.FailWithMessage("Failed to delete", c)
 		return
 	}
 	response.Ok(c)
+}
+
+func (contentApi *ContentApi) EditTitleAndTags(c *gin.Context) {
+	var req request.EditTitleAndTags
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	if err := contentService.EditTitleAndTags(req); err != nil {
+		global.Log.Error("Failed to edite:", zap.Error(err))
+		response.FailWithMessage("Failed to edite", c)
+		return
+	}
+	response.Ok(c)
+}
+
+func (contentApi *ContentApi) DeleteContentVideo(c *gin.Context) {
+
+}
+
+func (contentApi *ContentApi) DeleteContentPhoto(c *gin.Context) {
+
+}
+
+func (contentApi *ContentApi) UploadContentVideo(c *gin.Context) {
+
+}
+
+func (contentApi *ContentApi) UploadContentPhoto(c *gin.Context) {
+
 }
