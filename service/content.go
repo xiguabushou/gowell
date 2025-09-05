@@ -68,10 +68,10 @@ func (contentService *ContentService) GetInfo(uid string) (response.GetInfo, err
                 )
             ) AS match_count
         FROM contents t1
-        WHERE t1.uid != ? and t1.freeze = ?
+        WHERE t1.uid != ? and t1.freeze = ? and type_id = ?
         ORDER BY match_count DESC, t1.id
         LIMIT 6`
-	if err := global.DB.Raw(sql, uid, uid, appTypes.UnFreeze).Scan(&contentList).Error; err != nil {
+	if err := global.DB.Raw(sql, uid, uid, appTypes.UnFreeze, content.TypeID).Scan(&contentList).Error; err != nil {
 		return response.GetInfo{}, err
 	}
 
@@ -235,40 +235,49 @@ func (contentService *ContentService) EditTitleAndTags(req request.EditTitleAndT
 }
 
 func (contentService *ContentService) DeleteContentVideo(req request.DeleteContentVideo) error {
-	return os.Remove("uploads/video/" + req.UID + "/" + req.Name)
+	switch req.Name {
+	case "cover":
+		return os.Remove("uploads/video/" + req.UID + "/cover.png")
+	case "video":
+		return os.Remove("uploads/video/" + req.UID + "/video.mp4")
+	default:
+		return errors.New("unknown parameters")
+	}
 }
 
 func (contentService *ContentService) DeleteContentPhoto(req request.DeleteContentPhoto) error {
-	for _, mId := range req.ImageID {
-		err := global.DB.Where("image_id = ?", mId).Delete(&database.Photo{}).Error
-		if err != nil {
-			return err
+	return global.DB.Transaction(func(tx *gorm.DB) error {
+		for _, mId := range req.ImageID {
+			err := global.DB.Where("image_id = ?", mId).Delete(&database.Photo{}).Error
+			if err != nil {
+				return err
+			}
+
+			err = os.Remove("uploads/photo/" + req.UID + "/" + mId + ".png")
+			if err != nil {
+				return err
+			}
 		}
 
-		err = os.Remove("uploads/photo" + req.UID + "/" + mId + ".png")
-		if err != nil {
+		num := len(req.ImageID)
+		var content database.Content
+		if err := global.DB.Where("uid = ?", req.UID).First(&content).Error; err != nil {
 			return err
 		}
-	}
-
-	num := len(req.ImageID)
-	var content database.Content
-	if err := global.DB.Where("uid = ?", req.UID).First(&content).Error; err != nil {
-		return err
-	}
-	content.Number = content.Number - num
-	return global.DB.Save(&content).Error
+		content.Number = content.Number - num
+		return global.DB.Save(&content).Error
+	})
 }
 
 func (contentService *ContentService) UploadContentVideo(uid string, typeId string, file *multipart.FileHeader, c *gin.Context) error {
 	if typeId == "cover" {
-		err := c.SaveUploadedFile(file, "uploads/video"+uid+"/cover.png")
+		err := c.SaveUploadedFile(file, "uploads/video/"+uid+"/cover.png")
 		if err != nil {
 			return err
 		}
 	}
-	if typeId == "cover" {
-		err := c.SaveUploadedFile(file, "uploads/video"+uid+"/video.mp4")
+	if typeId == "video" {
+		err := c.SaveUploadedFile(file, "uploads/video/"+uid+"/video.mp4")
 		if err != nil {
 			return err
 		}
@@ -278,13 +287,12 @@ func (contentService *ContentService) UploadContentVideo(uid string, typeId stri
 
 func (contentService *ContentService) UploadContentPhoto(uid string, typeId string, files []*multipart.FileHeader, c *gin.Context) error {
 
-	if typeId == "cover" {
-		for _, v := range files {
-			if err := c.SaveUploadedFile(v, "uploads/photo/"+uid+"/cover.png"); err != nil {
-				return err
-			}
+	switch typeId {
+	case "cover":
+		if err := c.SaveUploadedFile(files[0], "uploads/photo/"+uid+"/cover.png"); err != nil {
+			return err
 		}
-	} else if typeId == "photo" {
+	case "photo":
 		num := 0
 		for _, v := range files {
 			photoID := uuid.Must(uuid.NewV4()).String()
@@ -310,8 +318,8 @@ func (contentService *ContentService) UploadContentPhoto(uid string, typeId stri
 		}
 		content.Number = content.Number + num
 		return global.DB.Save(&content).Error
-	} else {
-		return errors.New("unknown parameters！")
+	default:
+		return errors.New("unknown parameters")
 	}
 	return nil
 }

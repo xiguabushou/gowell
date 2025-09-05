@@ -16,6 +16,7 @@ func main() {
 	global.DB = initialize.InitGorm()
 
 	flag.InitFlag()
+	initialize.InitCron()
 
 	core.RunServer()
 }

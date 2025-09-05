@@ -102,7 +102,7 @@ func (contentApi *ContentApi) UploadPhoto(c *gin.Context) {
 
 func (contentApi *ContentApi) ListByAdmin(c *gin.Context) {
 	var req request.ListByAdmin
-	err := c.ShouldBindQuery(&req)
+	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
