@@ -4,6 +4,7 @@ import "goMedia/model/appTypes"
 
 type GetInfo struct {
 	UID string `json:"uid" form:"uid"`
+	PageInfo 
 }
 
 type GetList struct {

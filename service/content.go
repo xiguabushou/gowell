@@ -46,10 +46,34 @@ func (contentService *ContentService) GetList(info request.GetList) (any, int64,
 		Where:    db,
 	}
 
-	return utils.MySQLPagination(&database.Content{}, option)
+	list, total, err := utils.MySQLPagination(&database.Content{}, option)
+	if err != nil {
+		return nil, 0, err
+	}
+	var cover string
+	var contentType string
+	var contentList []other.ContentList
+	for _, v := range list {
+		if v.TypeID == appTypes.VIDEO {
+			cover = global.Config.System.Ip + "/video/" + v.UID + "/cover.png"
+			contentType = "视频"
+		}
+		if v.TypeID == appTypes.PHOTO {
+			cover = global.Config.System.Ip + "/photo/" + v.UID + "/cover.png"
+			contentType = "图片"
+		}
+		content := other.ContentList{
+			Uid:         v.UID,
+			Title:       v.Title,
+			Cover:       cover,
+			ContentType: contentType,
+		}
+		contentList = append(contentList, content)
+	}
+	return contentList, total, err
 }
 
-func (contentService *ContentService) GetInfo(uid string) (response.GetInfo, error) {
+func (contentService *ContentService) GetInfo(uid string, page int, pagesize int) (response.GetInfo, error) {
 	var content database.Content
 	if err := global.DB.Where("uid = ? and freeze = ?", uid, appTypes.UnFreeze).First(&content).Error; err != nil {
 		return response.GetInfo{}, err
@@ -80,13 +104,52 @@ func (contentService *ContentService) GetInfo(uid string) (response.GetInfo, err
 		return response.GetInfo{}, nil
 	}
 
-	var resoult = response.GetInfo{
-		Title:           content.Title,
-		Video:           content.UID,
-		Tags:            tags,
-		RecommendedList: contentList,
+	if content.TypeID == appTypes.VIDEO {
+		videoUrl := global.Config.System.Ip + "/video/" + content.UID + "/video.mp4"
+
+		var resoult = response.GetInfo{
+			Title:           content.Title,
+			Video:           videoUrl,
+			Tags:            tags,
+			RecommendedList: contentList,
+		}
+		return resoult, nil
 	}
-	return resoult, nil
+
+	if content.TypeID == appTypes.PHOTO {
+		var imagesUrl []string
+		db := global.DB
+		db = db.Where("uid = ?",uid)
+
+		var pageinfo = request.PageInfo{
+		Page:     page,
+		PageSize: pagesize,
+		}
+
+		option := other.MySQLOption{
+			PageInfo: pageinfo,
+			Where:    db,
+		}
+
+		tempList, total, err := utils.MySQLPagination(&database.Photo{},option)
+
+
+		for _, v := range tempList {
+			imageUrl := global.Config.System.Ip + "/photo/" + content.UID + "/" + v.ImageID + ".png"
+			imagesUrl = append(imagesUrl, imageUrl)
+		}
+
+		var resoult = response.GetInfo{
+			Title:           content.Title,
+			Tags:            tags,
+			RecommendedList: contentList,
+			Images:          imagesUrl,
+			Total: int(total),
+		}
+		return resoult, err
+	}
+
+	return response.GetInfo{}, nil
 }
 
 func (contentService *ContentService) UploadVideo(title string, tags string, file *multipart.FileHeader, cover *multipart.FileHeader, c *gin.Context) error {

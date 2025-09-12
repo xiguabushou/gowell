@@ -42,7 +42,7 @@ func (contentApi *ContentApi) GetInfo(c *gin.Context) {
 	}
 
 	fmt.Println(req.UID)
-	res, err := contentService.GetInfo(req.UID)
+	res, err := contentService.GetInfo(req.UID,req.Page,req.PageSize)
 	if err != nil {
 		global.Log.Error("Failed to get content info:", zap.Error(err))
 		response.FailWithMessage("Failed to get content info", c)

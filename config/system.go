@@ -13,6 +13,7 @@ type System struct {
 	UseMultipoint     bool   `json:"use_multipoint" yaml:"use_multipoint"`           // 是否启用多点登录拦截，防止同一账户在多个地方同时登录
 	SessionsSecret    string `json:"sessions_secret" yaml:"sessions_secret"`         // 用于加密会话的密钥，确保会话数据的安全性
 	ForgotPasswordUrl string `json:"forgot_password_url" yaml:"forgot_password_url"` //用于重新设置密码
+	Ip                string `json:"ip" yaml:"ip"`                                   //用于获取后端的静态资源时的url
 }
 
 func (s System) Addr() string {
