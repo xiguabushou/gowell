@@ -79,7 +79,7 @@ func (contentService *ContentService) GetInfo(uid string, page int, pagesize int
 		return response.GetInfo{}, err
 	}
 
-	var contentList []response.RecommendedList
+	var contentList []database.Content
 	sql := `
         SELECT 
             *,
@@ -107,16 +107,36 @@ func (contentService *ContentService) GetInfo(uid string, page int, pagesize int
 	if content.TypeID == appTypes.VIDEO {
 		videoUrl := global.Config.System.Ip + "/video/" + content.UID + "/video.mp4"
 
+		var newContentList []response.RecommendedList
+		for _,v := range contentList{
+			tempContent := response.RecommendedList{
+				Uid: v.UID,
+				Cover: global.Config.System.Ip + "/video/" + v.UID + "/cover.png",
+				Title: v.Title,
+			}
+			newContentList =append(newContentList, tempContent)
+		}
+
 		var resoult = response.GetInfo{
 			Title:           content.Title,
 			Video:           videoUrl,
 			Tags:            tags,
-			RecommendedList: contentList,
+			RecommendedList: newContentList,
 		}
 		return resoult, nil
 	}
 
 	if content.TypeID == appTypes.PHOTO {
+		var newContentList []response.RecommendedList
+		for _,v := range contentList{
+			tempContent := response.RecommendedList{
+				Uid: v.UID,
+				Cover: global.Config.System.Ip + "/photo/" + v.UID + "/cover.png",
+				Title: v.Title,
+			}
+			newContentList =append(newContentList, tempContent)
+		}
+
 		var imagesUrl []string
 		db := global.DB
 		db = db.Where("uid = ?",uid)
@@ -142,7 +162,7 @@ func (contentService *ContentService) GetInfo(uid string, page int, pagesize int
 		var resoult = response.GetInfo{
 			Title:           content.Title,
 			Tags:            tags,
-			RecommendedList: contentList,
+			RecommendedList: newContentList,
 			Images:          imagesUrl,
 			Total: int(total),
 		}
