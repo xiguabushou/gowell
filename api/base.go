@@ -59,5 +59,4 @@ func (baseApi *BaseApi) SendEmailVerificationCode(c *gin.Context) {
 		return
 	}
 	response.FailWithMessage("Incorrect verification code", c)
-	return
 }

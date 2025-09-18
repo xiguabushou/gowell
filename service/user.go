@@ -38,7 +38,7 @@ func (userService *UserService) Login(u database.User) (database.User, error) {
 	err := global.DB.Where("email = ?", u.Email).First(&user).Error
 	if err == nil {
 		if ok := utils.BcryptCheck(u.Password, user.Password); !ok {
-			return database.User{}, errors.New("incorrect email or password")
+			return database.User{}, errors.New("账号或密码错误")
 		}
 		return user, nil
 	}
@@ -54,12 +54,18 @@ func (userService *UserService) Login(u database.User) (database.User, error) {
 
 func (userService *UserService) AddUser(u request.AddUser) error {
 	var user database.User
+	if gorm.ErrRecordNotFound != global.DB.Where("email = ?",u.Email).First(&database.User{}).Error{
+		return errors.New("该账户已存在")
+	}
 	user.Email = u.Email
 	user.Password = utils.BcryptHash(u.Password)
 	user.UUID = uuid.Must(uuid.NewV4()).String()
 	user.Freeze = u.Freeze
 	user.RoleID = u.RoleID
-	return global.DB.Create(&user).Error
+	if global.DB.Create(&user).Error != nil{
+		return errors.New("添加用户失败")
+	}
+	return nil
 }
 
 func (userService *UserService) DeleteUser(id string) error {
@@ -112,6 +118,7 @@ func (userService *UserService) UserResetPassword(req request.UserResetPassword)
 	user.Password = utils.BcryptHash(req.NewPassword)
 	return global.DB.Save(&user).Error
 }
+
 func (userService *UserService) UserInfo(UUID string) (database.User, error) {
 	var user database.User
 	if err := global.DB.Take(&user, UUID).Error; err != nil {

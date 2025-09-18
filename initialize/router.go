@@ -36,11 +36,11 @@ func InitRouter() *gin.Engine {
 
 	publicGroup := Router.Group(global.Config.System.RouterPrefix)
 	userGroup := Router.Group(global.Config.System.RouterPrefix)
-	// userGroup.Use(middleware.JWTAuth())
+	userGroup.Use(middleware.JWTAuth())
 	vipGroup := Router.Group(global.Config.System.RouterPrefix)
-	// vipGroup.Use(middleware.JWTAuth()).Use(middleware.VipAuth())
+	vipGroup.Use(middleware.JWTAuth()).Use(middleware.VipAuth())
 	adminGroup := Router.Group(global.Config.System.RouterPrefix)
-	// adminGroup.Use(middleware.JWTAuth()).Use(middleware.AdminAuth())
+	adminGroup.Use(middleware.JWTAuth()).Use(middleware.AdminAuth())
 	{
 		routerGroup.BaseRouter.InitBaseRouter(publicGroup)
 		routerGroup.UserRouter.InitUserRouter(publicGroup, userGroup, vipGroup, adminGroup)

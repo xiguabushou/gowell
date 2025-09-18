@@ -43,10 +43,10 @@ type EditUser struct {
 }
 
 type AddUser struct {
-	Password string          `json:"password"`
+	Password string          `json:"password" binding:"required,min=8,max=16"`
 	RoleID   appTypes.RoleID `json:"role_id"`
 	Freeze   bool            `json:"freeze"`
-	Email    string          `json:"email"`
+	Email    string          `json:"email" binding:"required ,email"`
 }
 
 type UserList struct {

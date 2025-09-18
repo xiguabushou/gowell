@@ -34,21 +34,21 @@ func (userApi *UserApi) Register(c *gin.Context) {
 	fmt.Println(savedEmail)
 	fmt.Println(req.Email)
 	if savedEmail == nil || savedEmail.(string) != req.Email {
-		response.FailWithMessage("This email doesn't match the email to be verified", c)
+		response.FailWithMessage("两次邮箱不一致！", c)
 		return
 	}
 
 	// 获取会话中存储的邮箱验证码
 	savedCode := session.Get("verification_code")
 	if savedCode == nil || savedCode.(string) != req.VerificationCode {
-		response.FailWithMessage("Invalid verification code", c)
+		response.FailWithMessage("验证码错误！", c)
 		return
 	}
 
 	// 判断邮箱验证码是否过期
 	savedTime := session.Get("expire_time")
 	if savedTime.(int64) < time.Now().Unix() {
-		response.FailWithMessage("The verification code has expired, please resend it", c)
+		response.FailWithMessage("邮箱验证码过期！", c)
 		return
 	}
 
@@ -64,7 +64,7 @@ func (userApi *UserApi) Register(c *gin.Context) {
 	user, err := userService.Register(u)
 	if err != nil {
 		global.Log.Error("Failed to register user:", zap.Error(err))
-		response.FailWithMessage("Failed to register user", c)
+		response.FailWithMessage("账号已被注册！", c)
 		return
 	}
 
@@ -76,7 +76,7 @@ func (userApi *UserApi) Login(c *gin.Context) {
 	var req request.Login
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage("填写信息格式错误！", c)
 		return
 	}
 
@@ -86,7 +86,7 @@ func (userApi *UserApi) Login(c *gin.Context) {
 		user, err := userService.Login(u)
 		if err != nil {
 			global.Log.Error("Failed to login:", zap.Error(err))
-			response.FailWithMessage("Failed to login", c)
+			response.FailWithMessage(err.Error(), c)
 			return
 		}
 
@@ -94,20 +94,20 @@ func (userApi *UserApi) Login(c *gin.Context) {
 		userApi.TokenNext(c, user)
 		return
 	}
-	response.FailWithMessage("Incorrect verification code", c)
+	response.FailWithMessage("验证码错误！", c)
 }
 
 func (userApi *UserApi) AddUser(c *gin.Context) {
 	var req request.AddUser
 	err := c.ShouldBind(&req)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage("数据输入格式错误或者长度不符合要求", c)
 		return
 	}
 	err = userService.AddUser(req)
 	if err != nil {
 		global.Log.Error("Failed to add user:", zap.Error(err))
-		response.FailWithMessage("Failed to add user", c)
+		response.FailWithMessage(err.Error(), c)
 		return
 	}
 	response.OkWithMessage("User added successfully", c)
@@ -117,13 +117,13 @@ func (userApi *UserApi) DeleteUser(c *gin.Context) {
 	var req request.UserOperation
 	err := c.ShouldBind(&req)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage("数据绑定失败,请检查格式与长度", c)
 		return
 	}
 	err = userService.DeleteUser(req.ID)
 	if err != nil {
 		global.Log.Error("Failed to delete user:", zap.Error(err))
-		response.FailWithMessage("Failed to delete user", c)
+		response.FailWithMessage("删除用户失败", c)
 		return
 	}
 	response.OkWithMessage("User deleted successfully", c)
@@ -133,7 +133,7 @@ func (userApi *UserApi) ForgotPassword(c *gin.Context) {
 	var req request.ForgotPassword
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage("数据绑定失败,请检查格式与长度", c)
 		return
 	}
 
@@ -141,27 +141,26 @@ func (userApi *UserApi) ForgotPassword(c *gin.Context) {
 		err = userService.ForgotPassword(req.Email)
 		if err != nil {
 			global.Log.Error("Failed to send email:", zap.Error(err))
-			response.FailWithMessage("Failed to send email", c)
+			response.FailWithMessage("发送邮件失败", c)
 			return
 		}
 		response.OkWithMessage("Successfully sent email", c)
 		return
 	}
-	response.FailWithMessage("Incorrect verification code", c)
-	return
+	response.FailWithMessage("无效的验证码", c)
 }
 
 func (userApi *UserApi) AskForVip(c *gin.Context) {
 	var req request.AskForVip
 	err := c.ShouldBind(&req)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage("数据绑定失败,请检查格式与长度", c)
 		return
 	}
 	err = userService.AskForVip(req)
 	if err != nil {
 		global.Log.Error("Application failed:", zap.Error(err))
-		response.FailWithMessage("Application failed", c)
+		response.FailWithMessage("申请失败", c)
 		return
 	}
 	response.OkWithMessage("The application was successful", c)
@@ -170,7 +169,7 @@ func (userApi *UserApi) AskForVip(c *gin.Context) {
 func (userApi *UserApi) Logout(c *gin.Context) {
 	if err := userService.Logout(c); err != nil {
 		global.Log.Error("Failed to logout:", zap.Error(err))
-		response.FailWithMessage("Failed to logout", c)
+		response.FailWithMessage("注销失败", c)
 		return
 	}
 	response.OkWithMessage("Successful logout", c)
@@ -180,23 +179,17 @@ func (userApi *UserApi) UserResetPassword(c *gin.Context) {
 	var req request.UserResetPassword
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage("数据绑定失败,请检查格式与长度", c)
 		return
 	}
 	req.UUID = utils.GetUUID(c)
 	err = userService.UserResetPassword(req)
 	if err != nil {
 		global.Log.Error("Failed to modify:", zap.Error(err))
-		response.FailWithMessage("Failed to modify, orginal password does not match the current account", c)
+		response.FailWithMessage("修改密码失败,密码错误", c)
 		return
 	}
 	response.OkWithMessage("Successfully changed password, please log in again", c)
-	err = userService.Logout(c)
-	if err != nil {
-		global.Log.Error("Failed to logout:", zap.Error(err))
-		response.FailWithMessage("Failed to logout", c)
-		return
-	}
 }
 
 func (userApi *UserApi) UserInfo(c *gin.Context) {
@@ -299,7 +292,7 @@ func (userApi *UserApi) UserLoginList(c *gin.Context) {
 	}, c)
 }
 
-func (UserApi *UserApi)GetListAboutAskForVip(c *gin.Context){
+func (UserApi *UserApi) GetListAboutAskForVip(c *gin.Context) {
 	var pageInfo request.PageInfo
 	err := c.ShouldBindQuery(&pageInfo)
 	if err != nil {
@@ -454,11 +447,9 @@ func (userApi *UserApi) TokenNext(c *gin.Context, user database.User) {
 		AccessToken:          accessToken,
 		AccessTokenExpiresAt: accessClaims.ExpiresAt.Unix() * 1000,
 	}, "Successful login", c)
-	return
 }
 
-
-func (userApi *UserApi) ApprovingForVip(c *gin.Context){
+func (userApi *UserApi) ApprovingForVip(c *gin.Context) {
 	var req request.ApprovingForVip
 	err := c.ShouldBind(&req)
 	if err != nil {
@@ -472,5 +463,4 @@ func (userApi *UserApi) ApprovingForVip(c *gin.Context){
 		return
 	}
 	response.OkWithMessage("The commit success", c)
-
 }
