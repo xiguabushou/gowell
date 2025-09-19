@@ -54,7 +54,7 @@ func (userService *UserService) Login(u database.User) (database.User, error) {
 
 func (userService *UserService) AddUser(u request.AddUser) error {
 	var user database.User
-	if gorm.ErrRecordNotFound != global.DB.Where("email = ?",u.Email).First(&database.User{}).Error{
+	if gorm.ErrRecordNotFound != global.DB.Where("email = ?", u.Email).First(&database.User{}).Error {
 		return errors.New("该账户已存在")
 	}
 	user.Email = u.Email
@@ -62,7 +62,7 @@ func (userService *UserService) AddUser(u request.AddUser) error {
 	user.UUID = uuid.Must(uuid.NewV4()).String()
 	user.Freeze = u.Freeze
 	user.RoleID = u.RoleID
-	if global.DB.Create(&user).Error != nil{
+	if global.DB.Create(&user).Error != nil {
 		return errors.New("添加用户失败")
 	}
 	return nil
@@ -128,13 +128,12 @@ func (userService *UserService) UserInfo(UUID string) (database.User, error) {
 }
 func (userService *UserService) EditUser(req request.EditUser) error {
 	var user database.User
-	if err := global.DB.Take(&user, req.UUID).Error; err != nil {
+	if err := global.DB.Where("uuid = ?", req.UUID).First(&user).Error; err != nil {
 		return err
 	}
 	if req.Password != "" {
 		user.Password = utils.BcryptHash(req.Password)
 	}
-	user.Email = req.Email
 	user.RoleID = req.RoleID
 	user.Freeze = req.Freeze
 	return global.DB.Save(&user).Error
@@ -145,6 +144,14 @@ func (userService *UserService) UserList(info request.UserList) (interface{}, in
 
 	if info.Search != "" {
 		db = db.Where("email LIKE ?", "%"+info.Search+"%")
+	}
+
+	if info.RoleID == 0 || info.RoleID == 1 || info.RoleID == 2 {
+		db = db.Where("role_id = ?", info.RoleID)
+	}
+
+	if info.IsFreeze == 0 || info.IsFreeze == 1 {
+		db = db.Where("freeze = ?", info.IsFreeze)
 	}
 
 	option := other.MySQLOption{
@@ -230,6 +237,7 @@ func (userService *UserService) AskForVip(req request.AskForVip) error {
 	}
 
 	var newAskForVip = database.AskForVip{
+		Email:    req.Email,
 		Message:  req.Message,
 		UUID:     req.UUID,
 		FinishAt: nil,
@@ -250,7 +258,7 @@ func (userService *UserService) GetListAboutAskForVip(info request.PageInfo) (an
 	return utils.MySQLPagination(&database.AskForVip{}, options)
 }
 
-func (userService *UserService) ApprovingForVip(req request.ApprovingForVip) error {
+func (userService *UserService) ApprovingForVip(req request.ApprovingForVip, c *gin.Context) error {
 	return global.DB.Transaction(func(tx *gorm.DB) error {
 		if req.IsPass {
 			var user database.User
@@ -265,18 +273,18 @@ func (userService *UserService) ApprovingForVip(req request.ApprovingForVip) err
 			}
 			t := time.Now()
 			ask.FinishAt = &t
-			ask.Approver = req.UUID
+			ask.Approver = utils.GetEmail(c)
 			ask.ApprovalResults = req.IsPass
 			return tx.Save(&ask).Error
 		} else {
 			var ask database.AskForVip
-			err := tx.Where("uuid = ? and finish_at is null").First(&ask).Error
+			err := tx.Where("uuid = ? and finish_at is null", req.UUID).First(&ask).Error
 			if err != nil {
 				return err
 			}
 			t := time.Now()
 			ask.FinishAt = &t
-			ask.Approver = req.ApproverUUID
+			ask.Approver = utils.GetEmail(c)
 			ask.ApprovalResults = req.IsPass
 			return tx.Save(&ask).Error
 		}

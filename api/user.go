@@ -335,6 +335,7 @@ func (userApi *UserApi) TokenNext(c *gin.Context, user database.User) {
 	}
 
 	baseClaims := request.BaseClaims{
+		Email: user.Email,
 		UUID:   user.UUID,
 		RoleID: user.RoleID,
 	}
@@ -456,7 +457,7 @@ func (userApi *UserApi) ApprovingForVip(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	err = userService.ApprovingForVip(req)
+	err = userService.ApprovingForVip(req, c)
 	if err != nil {
 		global.Log.Error("The commit failed:", zap.Error(err))
 		response.FailWithMessage("The commit failed", c)

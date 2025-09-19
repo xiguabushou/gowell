@@ -2,10 +2,11 @@ package utils
 
 import (
 	"errors"
-	"github.com/golang-jwt/jwt/v4"
 	"goMedia/global"
 	"goMedia/model/request"
 	"time"
+
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type JWT struct {
@@ -58,6 +59,7 @@ func (j *JWT) CreateAccessToken(claims request.JwtCustomClaims) (string, error) 
 	return token.SignedString(j.TokenSecret)                   // 使用 AccessToken 密钥签名并返回 Token 字符串
 }
 
+// CreateToken 用于修改密码的一次性验证
 func (j *JWT) CreateToken(claims request.JwtCustomClaims2) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims) // 创建新的 JWT Token
 	return token.SignedString(j.TokenSecret)                   // 使用 AccessToken 密钥签名并返回 Token 字符串

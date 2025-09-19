@@ -73,6 +73,25 @@ func GetRoleID(c *gin.Context) appTypes.RoleID {
 	}
 }
 
+// GetEmail 从Gin的Context中获取JWT解析出来的用户邮箱
+func GetEmail(c *gin.Context) string {
+	// 首先尝试从Context中获取"claims"
+	if claims, exists := c.Get("claims"); !exists {
+		// 如果不存在，则重新解析Access Token
+		if cl, err := GetClaims(c); err != nil {
+			// 如果解析失败，返回0
+			return ""
+		} else {
+			// 返回解析出来的角色ID
+			return cl.Email
+		}
+	} else {
+		// 如果已存在claims，则直接返回角色ID
+		waitUse := claims.(*request.JwtCustomClaims)
+		return waitUse.Email
+	}
+}
+
 // ClearAccessToken 清除access Token的cookie
 func ClearAccessToken(c *gin.Context) {
 	// 获取请求的host，如果失败则取原始请求host

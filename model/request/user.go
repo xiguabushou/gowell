@@ -39,18 +39,19 @@ type EditUser struct {
 	Password string          `json:"password"`
 	RoleID   appTypes.RoleID `json:"role_id"`
 	Freeze   bool            `json:"freeze"`
-	Email    string          `json:"email"`
 }
 
 type AddUser struct {
 	Password string          `json:"password" binding:"required,min=8,max=16"`
 	RoleID   appTypes.RoleID `json:"role_id"`
 	Freeze   bool            `json:"freeze"`
-	Email    string          `json:"email" binding:"required ,email"`
+	Email    string          `json:"email" binding:"required,email"`
 }
 
 type UserList struct {
-	Search string `json:"search"`
+	Search   string          `form:"search"`
+	RoleID   appTypes.RoleID `form:"role_id"`
+	IsFreeze int             `form:"is_freeze"` // 0 正常  1 冻结  9全部
 	PageInfo
 }
 
@@ -67,6 +68,7 @@ type ResetForgotPassword struct {
 type AskForVip struct {
 	Message string `json:"message" binding:"max=150"`
 	UUID    string `json:"uuid" binding:"required"`
+	Email   string `json:"email" binding:"required,email"`
 }
 
 type GetListAboutAskForVip struct {
@@ -76,7 +78,6 @@ type GetListAboutAskForVip struct {
 }
 
 type ApprovingForVip struct {
-	ApproverUUID string `json:"approver_uuid"`
-	UUID    string `json:"uuid"`
-	IsPass  bool   `json:"is_pass"`
+	UUID   string `json:"uuid"`
+	IsPass bool   `json:"is_pass"`
 }
