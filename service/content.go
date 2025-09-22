@@ -108,13 +108,13 @@ func (contentService *ContentService) GetInfo(uid string, page int, pagesize int
 		videoUrl := global.Config.System.Ip + "/video/" + content.UID + "/video.mp4"
 
 		var newContentList []response.RecommendedList
-		for _,v := range contentList{
+		for _, v := range contentList {
 			tempContent := response.RecommendedList{
-				Uid: v.UID,
+				Uid:   v.UID,
 				Cover: global.Config.System.Ip + "/video/" + v.UID + "/cover.png",
 				Title: v.Title,
 			}
-			newContentList =append(newContentList, tempContent)
+			newContentList = append(newContentList, tempContent)
 		}
 
 		var resoult = response.GetInfo{
@@ -128,22 +128,22 @@ func (contentService *ContentService) GetInfo(uid string, page int, pagesize int
 
 	if content.TypeID == appTypes.PHOTO {
 		var newContentList []response.RecommendedList
-		for _,v := range contentList{
+		for _, v := range contentList {
 			tempContent := response.RecommendedList{
-				Uid: v.UID,
+				Uid:   v.UID,
 				Cover: global.Config.System.Ip + "/photo/" + v.UID + "/cover.png",
 				Title: v.Title,
 			}
-			newContentList =append(newContentList, tempContent)
+			newContentList = append(newContentList, tempContent)
 		}
 
 		var imagesUrl []string
 		db := global.DB
-		db = db.Where("uid = ?",uid)
+		db = db.Where("uid = ?", uid)
 
 		var pageinfo = request.PageInfo{
-		Page:     page,
-		PageSize: pagesize,
+			Page:     page,
+			PageSize: pagesize,
 		}
 
 		option := other.MySQLOption{
@@ -151,8 +151,7 @@ func (contentService *ContentService) GetInfo(uid string, page int, pagesize int
 			Where:    db,
 		}
 
-		tempList, total, err := utils.MySQLPagination(&database.Photo{},option)
-
+		tempList, total, err := utils.MySQLPagination(&database.Photo{}, option)
 
 		for _, v := range tempList {
 			imageUrl := global.Config.System.Ip + "/photo/" + content.UID + "/" + v.ImageID + ".png"
@@ -164,7 +163,7 @@ func (contentService *ContentService) GetInfo(uid string, page int, pagesize int
 			Tags:            tags,
 			RecommendedList: newContentList,
 			Images:          imagesUrl,
-			Total: int(total),
+			Total:           int(total),
 		}
 		return resoult, err
 	}
@@ -257,9 +256,18 @@ func (contentService *ContentService) UploadPhoto(title string, tags string, fil
 func (contentService *ContentService) ListByAdmin(info request.ListByAdmin) (any, int64, error) {
 	db := global.DB
 
-	if info.TypeID == appTypes.VIDEO || info.TypeID == appTypes.PHOTO {
-		db = db.Where("type_id = ? and freeze = ?", info.TypeID, info.Freeze)
+	if info.Keyword != "" {
+		db = db.Where("title LIKE ?", "%"+info.Keyword+"%")
 	}
+
+	if info.TypeID == 1 || info.TypeID == 2 {
+		db = db.Where("type_id = ?", info.TypeID)
+	}
+
+	if info.Freeze == 0 || info.Freeze == 1 {
+		db = db.Where("freeze = ?", info.Freeze)
+	}
+
 	var pageinfo = request.PageInfo{
 		Page:     info.Page,
 		PageSize: info.PageSize,
@@ -318,14 +326,9 @@ func (contentService *ContentService) EditTitleAndTags(req request.EditTitleAndT
 }
 
 func (contentService *ContentService) DeleteContentVideo(req request.DeleteContentVideo) error {
-	switch req.Name {
-	case "cover":
-		return os.Remove("uploads/video/" + req.UID + "/cover.png")
-	case "video":
-		return os.Remove("uploads/video/" + req.UID + "/video.mp4")
-	default:
-		return errors.New("unknown parameters")
-	}
+
+	return os.RemoveAll("uploads/video/" + req.UID + "/")
+
 }
 
 func (contentService *ContentService) DeleteContentPhoto(req request.DeleteContentPhoto) error {

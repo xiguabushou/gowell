@@ -4,7 +4,7 @@ import "goMedia/model/appTypes"
 
 type GetInfo struct {
 	UID string `json:"uid" form:"uid"`
-	PageInfo 
+	PageInfo
 }
 
 type GetList struct {
@@ -15,9 +15,9 @@ type GetList struct {
 
 type ListByAdmin struct {
 	PageInfo
-	TypeID  appTypes.TypeID   `json:"type_id" form:"type_id"`
-	Freeze  appTypes.FreezeID `json:"freeze" form:"freeze"`
-	Keyword string            `json:"keyword" form:"keyword"`
+	TypeID  int    `json:"type_id" form:"type_id"`
+	Freeze  int    `json:"freeze" form:"freeze"`
+	Keyword string `json:"keyword" form:"keyword"`
 }
 
 type GetID struct {
@@ -31,11 +31,10 @@ type EditTitleAndTags struct {
 }
 
 type DeleteContentVideo struct {
-	UID string `json:"uid"`
-	Name string `json:"name"`
+	UID  string `json:"uid"`
 }
 
-type DeleteContentPhoto struct{
-	UID string `json:"uid"`
+type DeleteContentPhoto struct {
+	UID     string   `json:"uid"`
 	ImageID []string `json:"image_id"`
 }
