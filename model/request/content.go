@@ -24,17 +24,7 @@ type GetID struct {
 	UID string `json:"uid" form:"uid"`
 }
 
-type EditTitleAndTags struct {
-	UID   string `json:"uid"`
-	Title string `json:"title"`
-	Tags  string `json:"tags"`
-}
-
-type DeleteContentVideo struct {
-	UID  string `json:"uid"`
-}
-
-type DeleteContentPhoto struct {
-	UID     string   `json:"uid"`
-	ImageID []string `json:"image_id"`
+type ContentFreeze struct {
+	UID    string `json:"uid"`
+	Freeze bool   `json:"freeze"`
 }

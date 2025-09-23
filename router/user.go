@@ -34,10 +34,8 @@ func (u *UserRouter) InitUserRouter(PublicRouter *gin.RouterGroup, UserRouter *g
 		userAdminRouter.POST("add", userApi.AddUser)
 		userAdminRouter.POST("delete", userApi.DeleteUser)
 		userAdminRouter.GET("list", userApi.UserList)
-		userAdminRouter.POST("freeze", userApi.UserFreeze)
-		userAdminRouter.POST("unfreeze", userApi.UserUnfreeze)
 		userAdminRouter.GET("loginList", userApi.UserLoginList)
-		userAdminRouter.GET("getListAboutAskForVip",userApi.GetListAboutAskForVip)
-		userAdminRouter.POST("approvingForVip",userApi.ApprovingForVip)
+		userAdminRouter.GET("getListAboutAskForVip", userApi.GetListAboutAskForVip)
+		userAdminRouter.POST("approvingForVip", userApi.ApprovingForVip)
 	}
 }

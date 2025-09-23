@@ -162,26 +162,7 @@ func (userService *UserService) UserList(info request.UserList) (interface{}, in
 	return utils.MySQLPagination(&database.User{}, option)
 
 }
-func (userService *UserService) UserFreeze(req request.UserOperation) error {
-	var user database.User
-	if err := global.DB.Take(&user, req.ID).Update("freeze", true).Error; err != nil {
-		return err
-	}
 
-	var jwt database.Jwt
-	if err := global.DB.Take(&jwt, user.ID).Error; err != nil {
-		return err
-	}
-
-	if jwt.Jwt != "" {
-		_ = ServiceGroupApp.JwtService.JoinInBlacklist(database.JwtBlacklist{Jwt: jwt.Jwt, CreatedTime: time.Now()})
-	}
-
-	return nil
-}
-func (userService *UserService) UserUnfreeze(req request.UserOperation) error {
-	return global.DB.Take(&database.User{}, req.ID).Update("freeze", false).Error
-}
 func (userService *UserService) UserLoginList(info request.UserLoginList) (interface{}, int64, error) {
 	db := global.DB
 

@@ -240,38 +240,6 @@ func (userApi *UserApi) UserList(c *gin.Context) {
 	}, c)
 }
 
-func (userApi *UserApi) UserFreeze(c *gin.Context) {
-	var req request.UserOperation
-	err := c.ShouldBindJSON(&req)
-	if err != nil {
-		response.FailWithMessage(err.Error(), c)
-		return
-	}
-	err = userService.UserFreeze(req)
-	if err != nil {
-		global.Log.Error("Failed to freeze user:", zap.Error(err))
-		response.FailWithMessage("Failed to freeze user", c)
-		return
-	}
-	response.OkWithMessage("Successfully freeze user", c)
-}
-
-func (userApi *UserApi) UserUnfreeze(c *gin.Context) {
-	var req request.UserOperation
-	err := c.ShouldBindJSON(&req)
-	if err != nil {
-		response.FailWithMessage(err.Error(), c)
-		return
-	}
-	err = userService.UserUnfreeze(req)
-	if err != nil {
-		global.Log.Error("Failed to unfreeze user:", zap.Error(err))
-		response.FailWithMessage("Failed to unfreeze user", c)
-		return
-	}
-	response.OkWithMessage("Successfully unfreeze user", c)
-}
-
 func (userApi *UserApi) UserLoginList(c *gin.Context) {
 	var pageInfo request.UserLoginList
 	err := c.ShouldBindQuery(&pageInfo)
