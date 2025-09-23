@@ -1,9 +1,11 @@
 package service
 
 import (
-	"go.uber.org/zap"
 	"goMedia/global"
 	"goMedia/model/database"
+	"time"
+
+	"go.uber.org/zap"
 )
 
 // JwtService 提供与JWT相关的服务
@@ -18,8 +20,12 @@ func (jwtService *JwtService) IsInBlacklist(jwt string) bool {
 }
 
 // JsonInBlacklist 将JWT添加到黑名单
-func (jwtService *JwtService) JoinInBlacklist(jwtList database.JwtBlacklist) error {
+func (jwtService *JwtService) JoinInBlacklist(jwt string) error {
 	// 将JWT记录插入到数据库中的黑名单表
+	jwtList := database.JwtBlacklist{
+		CreatedTime: time.Now(),
+		Jwt: 	   jwt,
+	}
 	if err := global.DB.Create(&jwtList).Error; err != nil {
 		return err
 	}

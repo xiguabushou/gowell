@@ -13,6 +13,10 @@ type BaseApi struct{}
 
 var store = base64Captcha.DefaultMemStore
 
+func (baseApi *BaseApi) Ping(c *gin.Context){
+	response.Ok(c)
+}
+
 func (baseApi *BaseApi) Captcha(c *gin.Context) {
 
 	// Captcha 生成数字验证码

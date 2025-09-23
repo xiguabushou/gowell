@@ -160,7 +160,7 @@ func (userApi *UserApi) AskForVip(c *gin.Context) {
 	err = userService.AskForVip(req)
 	if err != nil {
 		global.Log.Error("Application failed:", zap.Error(err))
-		response.FailWithMessage("申请失败", c)
+		response.FailWithMessage(err.Error(), c)
 		return
 	}
 	response.OkWithMessage("The application was successful", c)

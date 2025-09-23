@@ -40,6 +40,9 @@ func (userService *UserService) Login(u database.User) (database.User, error) {
 		if ok := utils.BcryptCheck(u.Password, user.Password); !ok {
 			return database.User{}, errors.New("账号或密码错误")
 		}
+		if user.Freeze {
+			return database.User{}, errors.New("账号被冻结，请联系管理员")
+		}
 		return user, nil
 	}
 
@@ -136,6 +139,15 @@ func (userService *UserService) EditUser(req request.EditUser) error {
 	}
 	user.RoleID = req.RoleID
 	user.Freeze = req.Freeze
+
+	var jwtList database.Jwt
+	if err := global.DB.Where("uuid = ?", req.UUID).First(&jwtList).Error; err == nil {
+		err := ServiceGroupApp.JwtService.JoinInBlacklist(jwtList.Jwt)
+		if err != nil {
+			return err
+		}
+	}
+
 	return global.DB.Save(&user).Error
 
 }
@@ -214,7 +226,7 @@ func (userService *UserService) AskForVip(req request.AskForVip) error {
 	err := global.DB.Where("uuid = ?", req.UUID).Where("finish_at is null").First(oldAskForVip).Error
 	if err == nil {
 		// 找到了记录，说明存在相同的未完成请求
-		return errors.New("the same request already exists")
+		return errors.New("已存在相同请求")
 	}
 
 	var newAskForVip = database.AskForVip{
@@ -256,7 +268,16 @@ func (userService *UserService) ApprovingForVip(req request.ApprovingForVip, c *
 			ask.FinishAt = &t
 			ask.Approver = utils.GetEmail(c)
 			ask.ApprovalResults = req.IsPass
+
+			var jwtList database.Jwt
+			if err := global.DB.Where("uuid = ?", req.UUID).First(&jwtList).Error; err == nil {
+				err := ServiceGroupApp.JwtService.JoinInBlacklist(jwtList.Jwt)
+				if err != nil {
+					return err
+				}
+			}
 			return tx.Save(&ask).Error
+
 		} else {
 			var ask database.AskForVip
 			err := tx.Where("uuid = ? and finish_at is null", req.UUID).First(&ask).Error
@@ -269,5 +290,6 @@ func (userService *UserService) ApprovingForVip(req request.ApprovingForVip, c *
 			ask.ApprovalResults = req.IsPass
 			return tx.Save(&ask).Error
 		}
+
 	})
 }

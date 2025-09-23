@@ -1,10 +1,11 @@
 package middleware
 
 import (
-	"github.com/gin-gonic/gin"
 	"goMedia/model/appTypes"
 	"goMedia/model/response"
 	"goMedia/utils"
+
+	"github.com/gin-gonic/gin"
 )
 
 func AdminAuth() gin.HandlerFunc {
@@ -13,10 +14,10 @@ func AdminAuth() gin.HandlerFunc {
 
 		if roleId == appTypes.Admin {
 			c.Next()
+			return
 		}
 
 		response.Forbidden("Access denied. Admin privileges are required", c)
 		c.Abort()
-		return
 	}
 }
