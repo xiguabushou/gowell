@@ -1,0 +1,49 @@
+mysql:
+  host: 192.168.1.18
+  port: 3306
+  config: charset=utf8mb4&parseTime=True&loc=Local
+  db_name: gowell
+  username: root
+  password: password
+  max_idle_conns: 10
+  max_open_conns: 100
+  log_mode: info
+zap:
+  level: info
+  filename: log/goMedia.log
+  max_size: 200
+  max_backups: 30
+  max_age: 5
+  is_console_print: true
+jwt:
+  token_secret: token_secret_is_very_important
+  token_expiry_time: 2h
+  issuer: go_blog
+system:
+  host: 0.0.0.0
+  port: 8888
+  env: release
+  router_prefix: api
+  use_multipoint: true
+  sessions_secret: sessions_secret_is_very_important
+  forgot_password_url: http://192.168.1.18/resetForgotPassword
+  ip: http://192.168.1.18:8888/uploads
+upload:
+  size: 20
+  path: uploads
+captcha:
+  height: 80
+  width: 240
+  length: 6
+  max_skew: 0.7
+  dot_count: 80
+email:
+  host: smtp.qq.com
+  port: 465
+  from: 3372366772@qq.com
+  nickname: gowell
+  secret: xxxxxxxxxx
+  is_ssl: true
+gaode:
+  enable: true
+  key: xxxxxxxxxx
